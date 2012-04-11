@@ -12,7 +12,7 @@ OBJCOPY	= avr-objcopy
 OBJDUMP = avr-objdump
 
 SRCDIR=src
-AVRCRYPTOLIBDIR=avrcryptolib
+AVRCRYPTOLIBDIR=libs/avrcryptolib
 
 CFLAGS=-mmcu=$(MCU) -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -I$(SRCDIR) -I$(AVRCRYPTOLIBDIR)
 ASMFLAGS=-mmcu=$(MCU) -Wall -I$(SRCDIR) -I$(AVRCRYPTOLIBDIR) -assembler-with-cpp
@@ -24,11 +24,11 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey.hex: stratumkey.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey.elf: src/main.o avrcryptolib/sha256.S.o
+stratumkey.elf: src/main.o libs/avrcryptolib/sha256.S.o
 	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
 	mv Map.map stratumkey.map
 
-avrcryptolib/sha256.S.o: avrcryptolib/sha256-asm.S
+libs/avrcryptolib/sha256.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) $(ASMFLAGS) -o $@ -c $<
 
 src/main.o: src/main.c
@@ -62,5 +62,5 @@ cleandep:
 
 clean:
 	rm -f *.o *.map *.elf *.eep *.lss
-	rm -f avrcryptolib/sha256.S.o
+	rm -f libs/avrcryptolib/sha256.S.o
 	rm -f src/main.o
