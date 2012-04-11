@@ -1,8 +1,18 @@
+#include <avr/io.h>
+
 #include <sha256.h>
+#include <i2csoft.h>
+
+#define F_CPU 8000000UL
+#include <util/delay.h>
 
 int main(void) {
-  uint8_t dest[32];
-  char *message = "foo";
-
-  sha256(&dest, message, 24);
+  SoftI2CInit();
+  while(1) {
+    SoftI2CStart();
+    SoftI2CWriteByte(0xde);
+    SoftI2CStop();
+    
+    _delay_ms(2);
+  }
 }

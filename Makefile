@@ -12,11 +12,12 @@ OBJCOPY	= avr-objcopy
 OBJDUMP = avr-objdump
 
 SRCDIR=src
+SOFTI2CDIR=libs/softi2c
 AVRCRYPTOLIBDIR=libs/avrcryptolib
 
-CFLAGS=-mmcu=$(MCU) -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -I$(SRCDIR) -I$(AVRCRYPTOLIBDIR)
-ASMFLAGS=-mmcu=$(MCU) -Wall -I$(SRCDIR) -I$(AVRCRYPTOLIBDIR) -assembler-with-cpp
-LDFLAGS=-mmcu=$(MCU) -Wl,-Map=Map.map -L$(SRCDIR) -L$(AVRCRYPTOLIBDIR)
+CFLAGS=-mmcu=$(MCU) -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(SOFTI2CDIR) -I$(AVRCRYPTOLIBDIR)
+ASMFLAGS=-mmcu=$(MCU) -Wall -I$(SRCDIR) -I$(SOFTI2CDIR) -I$(AVRCRYPTOLIBDIR) -assembler-with-cpp
+LDFLAGS=-mmcu=$(MCU) -Wl,-Map=Map.map -Wl,-gc-sections -L$(SRCDIR) -L$(SOFTI2CDIR) -L$(AVRCRYPTOLIBDIR)
 DEBUGFLAGS=-g -gdwarf-2
 
 ## compilation rules
@@ -24,12 +25,15 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey.hex: stratumkey.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey.elf: src/main.o libs/avrcryptolib/sha256.S.o
+stratumkey.elf: src/main.o libs/softi2c/i2csoft.o libs/avrcryptolib/sha256.S.o
 	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
 	mv Map.map stratumkey.map
 
 libs/avrcryptolib/sha256.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) $(ASMFLAGS) -o $@ -c $<
+
+libs/softi2c/i2csoft.o: libs/softi2c/i2csoft.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 src/main.o: src/main.c
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -63,4 +67,5 @@ cleandep:
 clean:
 	rm -f *.o *.map *.elf *.eep *.lss
 	rm -f libs/avrcryptolib/sha256.S.o
+	rm -f libs/softi2c/i2csoft.o
 	rm -f src/main.o
