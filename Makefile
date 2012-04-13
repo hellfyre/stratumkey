@@ -12,7 +12,6 @@ OBJCOPY	= avr-objcopy
 OBJDUMP = avr-objdump
 
 SRCDIR=src
-#SOFTI2CDIR=libs/softi2c
 OWDIR=libs/1wire
 CRYPTDIR=libs/avrcryptolib
 
@@ -35,9 +34,6 @@ sha256.S.o: libs/avrcryptolib/sha256-asm.S
 
 1wire.o: libs/1wire/1wire.c
 	$(CC) $(CFLAGS) -o $@ -c $<
-
-#i2csoft.o: libs/softi2c/i2csoft.c
-#	$(CC) $(CFLAGS) -o $@ -c $<
 
 main_slave.o: src/main_slave.c
 	$(CC) $(CFLAGS) -o $@ -c $<
