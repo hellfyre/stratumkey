@@ -23,12 +23,12 @@ DEBUGFLAGS=-g -gdwarf-2
 
 ## compilation rules
 
-stratumkey.hex: stratumkey.elf
+stratumkey_slave.hex: stratumkey_slave.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey.elf: main.o 1wire.o sha256.S.o
+stratumkey_slave.elf: main_slave.o 1wire.o sha256.S.o
 	$(CC) $(LDFLAGS) $^ -o $@
-	mv Map.map stratumkey.map
+	mv Map.map stratumkey_slave.map
 
 sha256.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) $(ASMFLAGS) -o $@ -c $<
@@ -39,7 +39,7 @@ sha256.S.o: libs/avrcryptolib/sha256-asm.S
 #i2csoft.o: libs/softi2c/i2csoft.c
 #	$(CC) $(CFLAGS) -o $@ -c $<
 
-main.o: src/main.c
+main_slave.o: src/main_slave.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 #%.eep: %.elf
@@ -48,7 +48,7 @@ main.o: src/main.c
 #%.lss: %.elf
 #	$(OBJDUMP) -h -S $< > $@
 
-upload: stratumkey.hex
+upload_slave: stratumkey_slave.hex
 	avrdude -c $(DUDEPROGRAMMER) -P $(DUDEPORT) -p $(DUDEMCU) -U flash:w:$<:i
 	rm -f *.map
 
