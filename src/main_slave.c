@@ -6,14 +6,22 @@
 #define F_CPU 1200000UL
 #include <util/delay.h>
 
-#define BUFSIZE 32
+// 8-bit-state, MSB indicates read state
+#define STATE_RESET 0x00
+#define STATE_CHALLENGE 0x81
+#define STATE_RESPONSE 0x02
+
+#define CR_LENGTH 32
+#define BUFSIZE 4
 #define WIREPIN PB0
 #define WIREDIR DDB0
 
-uint8_t READMODE = 0;
+uint8_t state = STATE_RESET;
 uint8_t rx_buf[BUFSIZE];
+uint8_t rx_buf_pos = 0;
 uint8_t tx_buf[BUFSIZE];
 uint8_t tx_buf_pos = 0;
+uint8_t bits_remaining;
 
 SIGNAL(SIG_PIN_CHANGE0) {
   uint8_t wire_high = (PINB>>WIREPIN) & 0x01;
@@ -51,15 +59,36 @@ void decode_bitwise(uint8_t timerval) {
     switch_to_output();
     _delay_us(OWI_DELAY_I_STD_MODE);
     switch_to_input();
+    state = STATE_CHALLENGE;
+    bits_remaining = CR_LENGTH;
   }
+  else if (!is_readmode()) {
+    if ( (timerval >= 1 && timerval <= 15) || (timerval >= 60 && timerval <= 120) ) {
+      tx_buf[tx_buf_pos] << 1;
+      if (timerval <= 15) {
+        tx_buf[tx_buf_pos] |= 0x01;
+      }
+      tx_buf_bit++;
+      if (tx_buf_bit == 8) {
+        uint8_t tx_buf_pos_tmp = tx_buf_pos;
+        tx_buf_pos = (tx_buf_pos + 1) % BUFSIZE;
+        tx_buf_bit = 0;
+        process_byte(tx_buf_pos_tmp);
+      }
+    }
+  }
+  /*
   else if (timerval >= 1 && timerval <= 15) { // write1 or read
     if (READMODE) {
     }
     else {
+      tx_buf[tx_buf_pos] << 1;
     }
   }
   else if (timerval >= 60 && timerval <= 120) { // write0
+    tx_buf[tx_buf_pos] << 1;
   }
+  */
 }
 
 void switch_to_output() {
@@ -70,4 +99,8 @@ void switch_to_output() {
 void switch_to_input() {
   DDRB &= ~(1<<WIREDIR);
   PORTB = (1<<WIREPIN);
+}
+
+uint8_t is_readmode() {
+  return (state>>7);
 }
