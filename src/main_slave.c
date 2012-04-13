@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 
 #include <sha256.h>
+#include <1wire.h>
 
 #define F_CPU 1200000UL
 #include <util/delay.h>
@@ -10,17 +11,17 @@
 #define STATE_RESET 0x00
 #define STATE_CHALLENGE 0x81
 #define STATE_RESPONSE 0x02
+#define IS_READMODE(state) (state>>7)
 
 #define CR_LENGTH 32
 #define BUFSIZE 4
 #define WIREPIN PB0
-#define WIREDIR DDB0
+
+void decode_bitwise(uint8_t interval);
 
 uint8_t state = STATE_RESET;
-uint8_t rx_buf[BUFSIZE];
-uint8_t rx_buf_pos = 0;
-uint8_t tx_buf[BUFSIZE];
-uint8_t tx_buf_pos = 0;
+uint8_t rxtx_buf[BUFSIZE];
+uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
 
 SIGNAL(SIG_PIN_CHANGE0) {
@@ -30,6 +31,7 @@ SIGNAL(SIG_PIN_CHANGE0) {
     timeval = TCNT0;
     TCCR0B = 0;
     TCNT0 = 0;
+    decode_bitwise(timeval);
   }
   else {
     TCCR0B = (1<<CS01);
@@ -38,9 +40,9 @@ SIGNAL(SIG_PIN_CHANGE0) {
 
 int main(void) {
   // First of all: pull line up (or down) to trigger IRQ at master
-  DDRB = (1<<WIREDIR);
+  DDRB = (1<<WIREPIN);
   PORTB = (1<<WIREPIN);
-  DDRB &= ~(1<<WIREDIR);
+  DDRB &= ~(1<<WIREPIN);
 
   GIMSK = (1<<PCIE);
   PCMSK = (1<<PCINT0);
@@ -49,58 +51,43 @@ int main(void) {
   while(1) {}
 }
 
-void idle_state() {
-  DDRB &= ~(1<<WIREDIR);
-  PORTB = (1<<WIREPIN);
-}
+void decode_bitwise(uint8_t interval) {
+  // sanity check: is our interval valid?
+  if (interval == 0) return;
+  if (interval > 15 && interval < 60) return;
+  if (interval > 120 && interval < 480) return;
 
-void decode_bitwise(uint8_t timerval) {
-  if (timerval >= 480) { // reset
-    switch_to_output();
+  // reset
+  if (interval >= 480) {
+    OWI_PULL_BUS_LOW(1<<WIREPIN);
     _delay_us(OWI_DELAY_I_STD_MODE);
-    switch_to_input();
+    OWI_RELEASE_BUS(1<<WIREPIN);
+
     state = STATE_CHALLENGE;
     bits_remaining = CR_LENGTH;
   }
-  else if (!is_readmode()) {
-    if ( (timerval >= 1 && timerval <= 15) || (timerval >= 60 && timerval <= 120) ) {
-      tx_buf[tx_buf_pos] << 1;
-      if (timerval <= 15) {
-        tx_buf[tx_buf_pos] |= 0x01;
+  else { // write0, write1 or read
+    uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] >> 7; // save the MSB of the current buffer byte, just in case we're in read mode
+    rxtx_buf[rxtx_buf_pos] <<= 1;
+
+    if (interval < 20) { // write1 or read
+      if (IS_READMODE(state)){
+        if (rx_msb) {
+          OWI_PULL_BUS_LOW(1<<WIREPIN);
+          _delay_us(OWI_DELAY_J_STD_MODE);
+          OWI_RELEASE_BUS(1<<WIREPIN);
+        }
       }
-      tx_buf_bit++;
-      if (tx_buf_bit == 8) {
-        uint8_t tx_buf_pos_tmp = tx_buf_pos;
-        tx_buf_pos = (tx_buf_pos + 1) % BUFSIZE;
-        tx_buf_bit = 0;
-        process_byte(tx_buf_pos_tmp);
+      else {
+        rxtx_buf[rxtx_buf_pos] |= 0x01;
       }
     }
-  }
-  /*
-  else if (timerval >= 1 && timerval <= 15) { // write1 or read
-    if (READMODE) {
+    bits_remaining--;
+    if (bits_remaining == 0) {
+      //next_state();
     }
-    else {
-      tx_buf[tx_buf_pos] << 1;
+    if ( (bits_remaining % 8) == 0) {
+      rxtx_buf_pos = (rxtx_buf_pos + 1) % BUFSIZE;
     }
   }
-  else if (timerval >= 60 && timerval <= 120) { // write0
-    tx_buf[tx_buf_pos] << 1;
-  }
-  */
-}
-
-void switch_to_output() {
-  DDRB = (1<<WIREDIR);
-  PORTB = 0;
-}
-
-void switch_to_input() {
-  DDRB &= ~(1<<WIREDIR);
-  PORTB = (1<<WIREPIN);
-}
-
-uint8_t is_readmode() {
-  return (state>>7);
 }
