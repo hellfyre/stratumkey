@@ -1,11 +1,12 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
-#include <sha256.h>
-#include <1wire.h>
+#include <stdlib.h>
 
 #define F_CPU 1200000UL
 #include <util/delay.h>
+
+#include <sha256.h>
+#include <1wire.h>
 
 // 8-bit-state, MSB indicates read state
 #define STATE_RESET 0x00
@@ -13,14 +14,18 @@
 #define STATE_RESPONSE 0x02
 #define IS_READMODE(state) (state>>7)
 
-#define CR_LENGTH 32
-#define BUFSIZE 4
+#define BUFSIZE 32
 #define WIREPIN PB0
 
+#define CR_LENGTH 0xff
+
 void decode_bitwise(uint8_t interval);
+void next_state();
 
 uint8_t state = STATE_RESET;
 uint8_t rxtx_buf[BUFSIZE];
+uint8_t random_val[BUFSIZE];
+uint8_t secret[BUFSIZE];
 uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
 
@@ -48,6 +53,11 @@ int main(void) {
   PCMSK = (1<<PCINT0);
   sei();
 
+  int i;
+  for (i=0; i<4; i++) {
+    secret[i] = 0xaf;
+  }
+
   while(1) {}
 }
 
@@ -68,7 +78,12 @@ void decode_bitwise(uint8_t interval) {
   }
   else { // write0, write1 or read
     uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] >> 7; // save the MSB of the current buffer byte, just in case we're in read mode
-    rxtx_buf[rxtx_buf_pos] <<= 1;
+    if (IS_READMODE(state)) {
+      rxtx_buf[rxtx_buf_pos] <<= 1;
+    }
+    else {
+      rxtx_buf[rxtx_buf_pos] >>= 1;
+    }
 
     if (interval < 20) { // write1 or read
       if (IS_READMODE(state)){
@@ -82,12 +97,37 @@ void decode_bitwise(uint8_t interval) {
         rxtx_buf[rxtx_buf_pos] |= 0x01;
       }
     }
-    bits_remaining--;
     if (bits_remaining == 0) {
-      //next_state();
+      next_state();
     }
     if ( (bits_remaining % 8) == 0) {
       rxtx_buf_pos = (rxtx_buf_pos + 1) % BUFSIZE;
     }
+    bits_remaining--;
+  }
+}
+
+void next_state() {
+  /*
+  switch(state) {
+    case STATE_CHALLENGE:
+      calculate_response();
+      break;
+    //case STATE_RESPONSE:
+  }
+  */
+
+  if (state == STATE_CHALLENGE) {
+    int i,j;
+    for (i=0; i<8; i++) {
+      unsigned long random_single = random();
+      for (j=(i*4); j<(i*4+4); j++) {
+        random_val[j] = random_single & 0xff;
+        rxtx_buf[j] &= random_val[j] & secret[j];
+        random_single >>= 8;
+      }
+    }
+    sha256(&rxtx_buf, rxtx_buf, 256);
+    state = STATE_RESPONSE;
   }
 }
