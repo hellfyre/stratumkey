@@ -5,7 +5,7 @@
 #define F_CPU 1200000UL
 #include <util/delay.h>
 
-#include <sha256.h>
+#include <avrcryptolib/sha256.h>
 
 // One-wire bus definitions
 

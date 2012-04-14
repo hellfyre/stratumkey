@@ -12,11 +12,10 @@ OBJCOPY	= avr-objcopy
 OBJDUMP = avr-objdump
 
 SRCDIR=src
-OWDIR=libs/1wire
-CRYPTDIR=libs/avrcryptolib
+LIBDIR=libs
 
-CFLAGS=-mmcu=$(MCU) -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(OWDIR) -I$(CRYPTDIR)
-ASMFLAGS=-mmcu=$(MCU) -Wall -I$(SRCDIR) -I$(OWDIR) -I$(CRYPTDIR) -assembler-with-cpp
+CFLAGS=-mmcu=$(MCU) -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR)
+ASMFLAGS=-mmcu=$(MCU) -Wall -I$(SRCDIR) -I$(LIBDIR) -assembler-with-cpp
 LDFLAGS=-mmcu=$(MCU) -Wl,-Map=Map.map -Wl,-gc-sections
 DEBUGFLAGS=-g -gdwarf-2
 
