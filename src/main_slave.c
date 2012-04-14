@@ -6,18 +6,44 @@
 #include <util/delay.h>
 
 #include <sha256.h>
-#include <1wire.h>
+
+// One-wire bus definitions
+
+#define OWI_PULL_BUS_LOW(bitMask) \
+            OWI_DDR |= bitMask; \
+            OWI_PORT &= ~bitMask;
+
+#define OWI_RELEASE_BUS(bitMask) \
+            OWI_DDR &= ~bitMask; \
+            OWI_PORT |= bitMask;
+
+// Bit timing delays in us
+#define     OWI_DELAY_A_STD_MODE    6
+#define     OWI_DELAY_B_STD_MODE    64
+#define     OWI_DELAY_C_STD_MODE    60
+#define     OWI_DELAY_D_STD_MODE    10
+#define     OWI_DELAY_E_STD_MODE    9
+#define     OWI_DELAY_F_STD_MODE    55
+//#define     OWI_DELAY_G_STD_MODE  0
+#define     OWI_DELAY_H_STD_MODE    480
+#define     OWI_DELAY_I_STD_MODE    70
+#define     OWI_DELAY_J_STD_MODE    40
+
+// MCU specific defines
+#define     OWI_PORT        PORTB
+#define     OWI_PIN         PINB
+#define     OWI_DDR         DDRB
+
+#define WIREPIN PB0
+
+#define BUFSIZE 32
+#define CR_LENGTH 0xff
 
 // 8-bit-state, MSB indicates read state
 #define STATE_RESET 0x00
 #define STATE_CHALLENGE 0x81
 #define STATE_RESPONSE 0x02
 #define IS_READMODE(state) (state>>7)
-
-#define BUFSIZE 32
-#define WIREPIN PB0
-
-#define CR_LENGTH 0xff
 
 void decode_bitwise(uint8_t interval);
 void next_state();
@@ -120,14 +146,15 @@ void next_state() {
   if (state == STATE_CHALLENGE) {
     int i,j;
     for (i=0; i<8; i++) {
-      unsigned long random_single = random();
+      //unsigned long random_single = random();
+      unsigned long random_single = 0xdededede;
       for (j=(i*4); j<(i*4+4); j++) {
         random_val[j] = random_single & 0xff;
         rxtx_buf[j] &= random_val[j] & secret[j];
         random_single >>= 8;
       }
     }
-    sha256(&rxtx_buf, rxtx_buf, 256);
+    //sha256(&rxtx_buf, rxtx_buf, 256);
     state = STATE_RESPONSE;
   }
 }

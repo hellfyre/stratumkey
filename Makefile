@@ -25,7 +25,7 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey_slave.hex: stratumkey_slave.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_slave.elf: main_slave.o 1wire.o sha256.S.o
+stratumkey_slave.elf: main_slave.o sha256.S.o
 	$(CC) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_slave.map
 
