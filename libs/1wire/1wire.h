@@ -12,9 +12,9 @@
 #define EFAILED			1
 
 // Custom defines
-#define     OWI_PORT        PORTB
-#define     OWI_PIN         PINB
-#define     OWI_DDR         DDRB
+#define     OWI_PORT        PORTD
+#define     OWI_PIN         PIND
+#define     OWI_DDR         DDRD
 
 // Bit timing delays in us
 #define     OWI_DELAY_A_STD_MODE    6
