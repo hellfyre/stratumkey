@@ -38,10 +38,10 @@ sha256_master.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) -mmcu=$(MCU_MASTER) $(ASMFLAGS) -o $@ -c $<
 
 1wire.o: libs/1wire/1wire.c
-	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) -D$(MCU_MASTER) $(CFLAGS) -o $@ -c $<
 
 main_master.o: src/main_master.c
-	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) -D$(MCU_MASTER) $(CFLAGS) -o $@ -c $<
 
 upload_master: stratumkey_master.hex
 	avrdude -c $(DUDEPROGRAMMER) -P $(DUDEPORT) -p $(DUDEMCU_MASTER) -U flash:w:$<:i
@@ -59,7 +59,7 @@ sha256_slave.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) -mmcu=$(MCU_SLAVE) $(ASMFLAGS) -o $@ -c $<
 
 main_slave.o: src/main_slave.c
-	$(CC) -mmcu=$(MCU_SLAVE) -DF_CPU=$(F_CPU_SLAVE) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU_SLAVE) -DF_CPU=$(F_CPU_SLAVE) -D$(MCU_SLAVE) $(CFLAGS) -o $@ -c $<
 
 upload_slave: stratumkey_slave.hex
 	avrdude -c $(DUDEPROGRAMMER) -P $(DUDEPORT) -p $(DUDEMCU_SLAVE) -U flash:w:$<:i

@@ -29,7 +29,7 @@
 #define     OWI_DELAY_J_STD_MODE    40
 
 // MCU specific defines
-#ifdef ATTINY13
+#ifdef attiny13
 #define     OWI_PORT        PORTB
 #define     OWI_PIN         PINB
 #define     OWI_DDR         DDRB
@@ -39,7 +39,7 @@
 #define     TDIV            _BV(CS01)
 #endif
 
-#ifdef ATMEGA8
+#ifdef atmega8
 #define     OWI_PORT        PORTD
 #define     OWI_PIN         PIND
 #define     OWI_DDR         DDRD
@@ -91,11 +91,11 @@ int main(void) {
 
   MCUCR = _BV(ISC00);
 
-  #ifdef ATTINY13
+  #ifdef attiny13
   GIMSK = _BV(PCIE);
   PCMSK = _BV(PCINT0);
   #endif
-  #ifdef ATMEGA8
+  #ifdef atmega8
   GICR = _BV(INT0);
   #endif
   sei();
