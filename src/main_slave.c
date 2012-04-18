@@ -50,7 +50,7 @@ void next_state();
 
 uint8_t state = STATE_RESET;
 uint8_t rxtx_buf[BUFSIZE];
-uint8_t random_val[BUFSIZE];
+//uint8_t random_val[BUFSIZE];
 uint8_t secret[BUFSIZE];
 uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
@@ -89,6 +89,7 @@ int main(void) {
 
 void decode_bitwise(uint8_t interval) {
   // sanity check: is our interval valid?
+  // TODO do real life test to determine whether we need this
   if (interval == 0) return;
   if (interval > 15 && interval < 60) return;
   if (interval > 120 && interval < 480) return;
@@ -114,7 +115,7 @@ void decode_bitwise(uint8_t interval) {
           OWI_RELEASE_BUS(1<<WIREPIN);
         }
       }
-      else {
+      else { // if we are in write mode, write a 1 to the MSB
         rxtx_buf[rxtx_buf_pos] |= 0x80;
       }
     }
@@ -129,26 +130,20 @@ void decode_bitwise(uint8_t interval) {
 }
 
 void next_state() {
-  /*
-  switch(state) {
-    case STATE_CHALLENGE:
-      calculate_response();
-      break;
-    //case STATE_RESPONSE:
-  }
-  */
-
   if (state == STATE_CHALLENGE) {
+    // This would be the "client also sends random value" paranoia function
+    /*
     int i,j;
     for (i=0; i<8; i++) {
-      //unsigned long random_single = random();
-      unsigned long random_single = 0xdededede;
+      unsigned long random_single = random();
       for (j=(i*4); j<(i*4+4); j++) {
         random_val[j] = random_single & 0xff;
         rxtx_buf[j] &= random_val[j] & secret[j];
         random_single >>= 8;
       }
     }
+    */
+
     //sha256(&rxtx_buf, rxtx_buf, 256);
     state = STATE_RESPONSE;
   }
