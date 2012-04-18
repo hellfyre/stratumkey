@@ -29,11 +29,25 @@
 #define     OWI_DELAY_J_STD_MODE    40
 
 // MCU specific defines
+#ifdef ATTINY13
 #define     OWI_PORT        PORTB
 #define     OWI_PIN         PINB
 #define     OWI_DDR         DDRB
+#define     WIREPIN         PB0
+#define     TCR             TCCR0B
+#define     TCNT            TCNT0
+#define     TDIV            _BV(CS01)
+#endif
 
-#define WIREPIN PB0
+#ifdef ATMEGA8
+#define     OWI_PORT        PORTD
+#define     OWI_PIN         PIND
+#define     OWI_DDR         DDRD
+#define     WIREPIN         PD2
+#define     TCR             TCCR2
+#define     TCNT            TCNT2
+#define     TDIV            _BV(CS20)
+#endif
 
 #define BUFSIZE 32
 #define CR_LENGTH 0xff
@@ -55,27 +69,35 @@ uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
 
 SIGNAL(SIG_INTERRUPT0) {
-  uint8_t wire_high = (PINB>>WIREPIN) & 0x01;
   uint8_t timeval;
+  uint8_t wire_high = (OWI_PIN>>WIREPIN) & 0x01;
+
   if (wire_high) {
-    timeval = TCNT0;
-    TCCR0B = 0;
-    TCNT0 = 0;
+    timeval = TCNT;
+    TCR = 0;
+    TCNT = 0;
     decode_bitwise(timeval);
   }
   else {
-    TCCR0B = (1<<CS01);
+    TCR = TDIV;
   }
 }
 
 int main(void) {
   // First of all: pull line up (or down) to trigger IRQ at master
-  DDRB = (1<<WIREPIN);
-  PORTB = (1<<WIREPIN);
-  DDRB &= ~(1<<WIREPIN);
+  OWI_DDR = _BV(WIREPIN);
+  OWI_PORT = _BV(WIREPIN);
+  OWI_DDR &= ~_BV(WIREPIN);
 
-  GIMSK = (1<<PCIE);
-  PCMSK = (1<<PCINT0);
+  MCUCR = _BV(ISC00);
+
+  #ifdef ATTINY13
+  GIMSK = _BV(PCIE);
+  PCMSK = _BV(PCINT0);
+  #endif
+  #ifdef ATMEGA8
+  GICR = _BV(INT0);
+  #endif
   sei();
 
   int i;
@@ -95,9 +117,9 @@ void decode_bitwise(uint8_t interval) {
 
   // reset
   if (interval >= 480) {
-    OWI_PULL_BUS_LOW(1<<WIREPIN);
+    OWI_PULL_BUS_LOW(_BV(WIREPIN));
     _delay_us(OWI_DELAY_I_STD_MODE);
-    OWI_RELEASE_BUS(1<<WIREPIN);
+    OWI_RELEASE_BUS(_BV(WIREPIN));
 
     state = STATE_CHALLENGE;
     bits_remaining = CR_LENGTH;
@@ -109,9 +131,9 @@ void decode_bitwise(uint8_t interval) {
     if (interval < 20) { // write1 or read
       if (IS_READMODE(state)){
         if (rx_msb) {
-          OWI_PULL_BUS_LOW(1<<WIREPIN);
+          OWI_PULL_BUS_LOW(_BV(WIREPIN));
           _delay_us(OWI_DELAY_J_STD_MODE);
-          OWI_RELEASE_BUS(1<<WIREPIN);
+          OWI_RELEASE_BUS(_BV(WIREPIN));
         }
       }
       else { // if we are in write mode, write a 1 to the MSB
