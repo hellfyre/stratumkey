@@ -55,7 +55,7 @@ uint8_t secret[BUFSIZE];
 uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
 
-SIGNAL(SIG_PIN_CHANGE0) {
+SIGNAL(SIG_INTERRUPT0) {
   uint8_t wire_high = (PINB>>WIREPIN) & 0x01;
   uint8_t timeval;
   if (wire_high) {
@@ -104,12 +104,7 @@ void decode_bitwise(uint8_t interval) {
   }
   else { // write0, write1 or read
     uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] >> 7; // save the MSB of the current buffer byte, just in case we're in read mode
-    if (IS_READMODE(state)) {
-      rxtx_buf[rxtx_buf_pos] <<= 1;
-    }
-    else {
-      rxtx_buf[rxtx_buf_pos] >>= 1;
-    }
+    rxtx_buf[rxtx_buf_pos] <<= 1;
 
     if (interval < 20) { // write1 or read
       if (IS_READMODE(state)){
