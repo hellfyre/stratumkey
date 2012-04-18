@@ -103,8 +103,8 @@ void decode_bitwise(uint8_t interval) {
     bits_remaining = CR_LENGTH;
   }
   else { // write0, write1 or read
-    uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] >> 7; // save the MSB of the current buffer byte, just in case we're in read mode
-    rxtx_buf[rxtx_buf_pos] <<= 1;
+    uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] & 0x01; // save the LSB of the current buffer byte, just in case we're in read mode
+    rxtx_buf[rxtx_buf_pos] >>= 1;
 
     if (interval < 20) { // write1 or read
       if (IS_READMODE(state)){
@@ -115,7 +115,7 @@ void decode_bitwise(uint8_t interval) {
         }
       }
       else {
-        rxtx_buf[rxtx_buf_pos] |= 0x01;
+        rxtx_buf[rxtx_buf_pos] |= 0x80;
       }
     }
     if (bits_remaining == 0) {
