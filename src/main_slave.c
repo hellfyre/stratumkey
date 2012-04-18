@@ -2,7 +2,6 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
-#define F_CPU 1200000UL
 #include <util/delay.h>
 
 #include <avrcryptolib/sha256.h>

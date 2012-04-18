@@ -1,5 +1,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
+
+#include <util/delay.h>
 
 #include <1wire/1wire.h>
 #include <avrcryptolib/sha256.h>
@@ -13,6 +16,8 @@
 uint8_t secret[32];
 uint8_t challenge[32];
 uint8_t response[32];
+
+void challenge_response_cycle();
 
 SIGNAL(SIG_INTERRUPT0) {
   owi_init(1<<WIREPIN);
