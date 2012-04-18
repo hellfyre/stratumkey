@@ -1,0 +1,16 @@
+Stratumkey is a physical access control system originally designed for enabling
+members of Stratum0 [1] to enter the hackerspace.
+
+The current implementation uses a large 3-pin male audio jack (6.3mm) on the
+slave side (the "key") and female audio jack on the master side (the "door").
+Inside the housing of the key is a small MCU (e.g. ATTiny85), that is powered
+over two of the three pins.
+The third pin is used for communication: We use a very simple one-wire protocol,
+which only supports two devices on the bus (master and slave). As our system is
+not intended to use more than two devices physically, we omitted the addressing.
+
+This repository holds the software part of the project. For more information,
+visit [2] or contact us.
+
+[1] https://stratum0.org
+[2] https://stratum0.org/mediawiki/index.php/Spacegate
