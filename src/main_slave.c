@@ -23,14 +23,14 @@ SIGNAL(SIG_INTERRUPT0) {
   uint8_t timeval;
   uint8_t wire = OWI_PIN;
 
-  if ( (wire & _BV(WIREPIN)) == _BV(WIREPIN) ) {
+  if ( (wire & _BV(WIREPIN)) == _BV(WIREPIN) ) { // if wire high
+    TCR = TDIV;
+  }
+  else {
     timeval = TCNT;
     TCR = 0;
     TCNT = 0;
     decode_bitwise(timeval);
-  }
-  else {
-    TCR = TDIV;
   }
 }
 
@@ -63,8 +63,7 @@ void decode_bitwise(uint8_t interval) {
 
   // reset
   if (interval >= 230) {
-    cli();
-    OWI_PULL_BUS_LOW(_BV(WIREPIN));
+    OWI_PULL_BUS(_BV(WIREPIN));
     _delay_us(OWI_DELAY_I_STD_MODE);
     OWI_RELEASE_BUS(_BV(WIREPIN));
 
@@ -79,7 +78,7 @@ void decode_bitwise(uint8_t interval) {
     if (interval < 20) { // write1 or read
       if (IS_READMODE(state)){
         if (rx_msb) {
-          OWI_PULL_BUS_LOW(_BV(WIREPIN));
+          OWI_PULL_BUS(_BV(WIREPIN));
           _delay_us(OWI_DELAY_J_STD_MODE);
           OWI_RELEASE_BUS(_BV(WIREPIN));
         }

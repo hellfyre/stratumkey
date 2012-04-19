@@ -2,13 +2,13 @@
 #define __MAIN_SLAVE_H__
 
 // One-wire bus definitions
-#define OWI_PULL_BUS_LOW(bitMask) \
+#define OWI_PULL_BUS(bitMask) \
             OWI_DDR |= bitMask; \
-            OWI_PORT &= ~bitMask;
+            OWI_PORT |= bitMask;
 
 #define OWI_RELEASE_BUS(bitMask) \
             OWI_DDR &= ~bitMask; \
-            OWI_PORT |= bitMask;
+            OWI_PORT &= ~bitMask;
 
 // Bit timing delays in us
 #define     OWI_DELAY_A_STD_MODE    6

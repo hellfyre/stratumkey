@@ -46,12 +46,12 @@ void owi_matchrom(uint8_t *rom, uint8_t pins);
 uint8_t owi_searchrom(uint8_t *pattern, uint8_t lastdev, uint8_t pins);
 uint8_t owi_getdevice(uint8_t *id, uint8_t family, uint8_t bus);
 
-#define OWI_PULL_BUS_LOW(bitMask) \
-            OWI_DDR |= bitMask; \
-            OWI_PORT &= ~bitMask;
-
-#define OWI_RELEASE_BUS(bitMask) \
+#define OWI_PULL_BUS(bitMask) \
             OWI_DDR |= bitMask; \
             OWI_PORT |= bitMask;
+
+#define OWI_RELEASE_BUS(bitMask) \
+            OWI_DDR &= ~bitMask; \
+            OWI_PORT &= ~bitMask;
 
 #endif /* __1WIRE_H__ */

@@ -58,7 +58,7 @@ void owi_writebit0(uint8_t pins)
   intstate = SREG;
   cli();
 
-  OWI_PULL_BUS_LOW(pins);
+  OWI_PULL_BUS(pins);
   _delay_us(OWI_DELAY_C_STD_MODE);
 
   OWI_RELEASE_BUS(pins);
@@ -74,7 +74,7 @@ void owi_writebit1(uint8_t pins)
   intstate = SREG;
   cli();
 
-  OWI_PULL_BUS_LOW(pins);
+  OWI_PULL_BUS(pins);
   _delay_us(OWI_DELAY_A_STD_MODE);
 
   OWI_RELEASE_BUS(pins);
@@ -90,7 +90,7 @@ uint8_t owi_readbit(uint8_t pins)
   intstate = SREG;
   cli();
 
-  OWI_PULL_BUS_LOW(pins);
+  OWI_PULL_BUS(pins);
   _delay_us(OWI_DELAY_A_STD_MODE);
 
   OWI_RELEASE_BUS(pins);
@@ -112,13 +112,13 @@ uint8_t owi_detectpresence(uint8_t pins)
   intstate = SREG;
   cli();
 
-  OWI_PULL_BUS_LOW(pins);
+  OWI_PULL_BUS(pins);
   _delay_us(OWI_DELAY_H_STD_MODE);
 
   OWI_RELEASE_BUS(pins);
   _delay_us(OWI_DELAY_I_STD_MODE);
 
-  presence = ((~OWI_PIN) & pins);
+  presence = (OWI_PIN & pins);
   _delay_us(OWI_DELAY_F_STD_MODE);
 
   SREG = intstate;
