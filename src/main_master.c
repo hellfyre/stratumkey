@@ -3,6 +3,7 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
+#include <main_master.h>
 #include <1wire/1wire.h>
 #include <avrcryptolib/sha256.h>
 
@@ -12,12 +13,62 @@ uint8_t response[32];
 
 void challenge_response_cycle();
 
+/*
 SIGNAL(SIG_INTERRUPT0) {
-  owi_init(_BV(WIREPIN));
-  challenge_response_cycle();
+  cli();
+  MCUCR = 0;
+  GICR = 0;
+
+  DDRB = _BV(PB6);
+  PORTB = _BV(PB6);
+  OWI_DDR = _BV(WIREPIN);
+  OWI_PORT = _BV(WIREPIN);
+  _delay_ms(1000);
+  DDRB = 0;
+  PORTB = 0;
+  //challenge_response_cycle();
+  
+
+  sei();
 }
+*/
 
 int main(void) {
+  /*
+  MCUCR = _BV(ISC00);
+  GICR = _BV(INT0);
+  sei();
+  */
+
+  owi_init(_BV(WIREPIN));
+
+  while (1) {
+    uint8_t presence = 0;
+    presence = owi_detectpresence(_BV(WIREPIN));
+    if (presence > 0) {
+      DDRB = _BV(PB6);
+      PORTB = _BV(PB6);
+      _delay_ms(500);
+      DDRB = 0;
+      PORTB = 0;
+      _delay_ms(500);
+      DDRB = _BV(PB6);
+      PORTB = _BV(PB6);
+      _delay_ms(500);
+      DDRB = 0;
+      PORTB = 0;
+      _delay_ms(500);
+      DDRB = _BV(PB6);
+      PORTB = _BV(PB6);
+      _delay_ms(500);
+      DDRB = 0;
+      PORTB = 0;
+      _delay_ms(500);
+      owi_sendbyte(0xaf, _BV(WIREPIN));
+    }
+    _delay_ms(500);
+  }
+
   int i;
   for (i=0; i<4; i++) {
     secret[i] = 0xaf;
@@ -25,7 +76,16 @@ int main(void) {
 }
 
 void challenge_response_cycle() {
-  owi_detectpresence(_BV(WIREPIN));
+  uint8_t presence = 0;
+  presence = owi_detectpresence(_BV(WIREPIN));
+  if (presence > 0) {
+    DDRB = _BV(PB6);
+    PORTB = _BV(PB6);
+    _delay_ms(1000);
+    PORTB = 0;
+    _delay_ms(1000);
+  }
+
   // TODO check return value of owi_detectpresence
 
   // generate random challenge
@@ -40,7 +100,7 @@ void challenge_response_cycle() {
 
   // send challenge
   for (i=0; i<32; i++) {
-    owi_sendbyte(challenge[i], _BV(1<<WIREPIN));
+    owi_sendbyte(challenge[i], _BV(WIREPIN));
   }
 
   // wait for the slave to process the challenge

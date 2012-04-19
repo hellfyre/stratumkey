@@ -6,7 +6,7 @@
 #endif
 
 #ifdef atmega8
-#define WIREPIN PD0
+#define WIREPIN PD2
 #endif
 
 #define STATE_IDLE 0x00

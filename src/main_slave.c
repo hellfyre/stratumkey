@@ -21,9 +21,9 @@ uint8_t bits_remaining;
 
 SIGNAL(SIG_INTERRUPT0) {
   uint8_t timeval;
-  uint8_t wire_high = (OWI_PIN>>WIREPIN) & 0x01;
+  uint8_t wire = OWI_PIN;
 
-  if (wire_high) {
+  if ( (wire & _BV(WIREPIN)) == _BV(WIREPIN) ) {
     timeval = TCNT;
     TCR = 0;
     TCNT = 0;
@@ -35,11 +35,6 @@ SIGNAL(SIG_INTERRUPT0) {
 }
 
 int main(void) {
-  // First of all: pull line up (or down) to trigger IRQ at master
-  OWI_DDR = _BV(WIREPIN);
-  OWI_PORT = _BV(WIREPIN);
-  OWI_DDR &= ~_BV(WIREPIN);
-
   MCUCR = _BV(ISC00);
 
   #ifdef attiny13
@@ -64,16 +59,18 @@ void decode_bitwise(uint8_t interval) {
   // TODO do real life test to determine whether we need this
   if (interval == 0) return;
   if (interval > 15 && interval < 60) return;
-  if (interval > 120 && interval < 480) return;
+  if (interval > 120 && interval < 230) return;
 
   // reset
-  if (interval >= 480) {
+  if (interval >= 230) {
+    cli();
     OWI_PULL_BUS_LOW(_BV(WIREPIN));
     _delay_us(OWI_DELAY_I_STD_MODE);
     OWI_RELEASE_BUS(_BV(WIREPIN));
 
     state = STATE_CHALLENGE;
-    bits_remaining = CR_LENGTH;
+    //bits_remaining = CR_LENGTH;
+    bits_remaining = 8;
   }
   else { // write0, write1 or read
     uint8_t rx_msb = rxtx_buf[rxtx_buf_pos] & 0x01; // save the LSB of the current buffer byte, just in case we're in read mode
@@ -102,6 +99,29 @@ void decode_bitwise(uint8_t interval) {
 }
 
 void next_state() {
+  if (rxtx_buf[0] == 0xaf) {
+    DDRB = _BV(PB6);
+    PORTB = _BV(PB6);
+    _delay_ms(500);
+    DDRB = 0;
+    PORTB = 0;
+    _delay_ms(500);
+    DDRB = _BV(PB6);
+    PORTB = _BV(PB6);
+    _delay_ms(500);
+    DDRB = 0;
+    PORTB = 0;
+    _delay_ms(500);
+    DDRB = _BV(PB6);
+    PORTB = _BV(PB6);
+    _delay_ms(500);
+    DDRB = 0;
+    PORTB = 0;
+    _delay_ms(500);
+  }
+
+  return;
+
   if (state == STATE_CHALLENGE) {
     // This would be the "client also sends random value" paranoia function
     /*

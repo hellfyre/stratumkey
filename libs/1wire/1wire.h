@@ -24,7 +24,7 @@
 #define     OWI_DELAY_E_STD_MODE    9
 #define     OWI_DELAY_F_STD_MODE    55
 //#define     OWI_DELAY_G_STD_MODE  0
-#define     OWI_DELAY_H_STD_MODE    480
+#define     OWI_DELAY_H_STD_MODE    240
 #define     OWI_DELAY_I_STD_MODE    70
 #define     OWI_DELAY_J_STD_MODE    40
 
@@ -51,7 +51,7 @@ uint8_t owi_getdevice(uint8_t *id, uint8_t family, uint8_t bus);
             OWI_PORT &= ~bitMask;
 
 #define OWI_RELEASE_BUS(bitMask) \
-            OWI_DDR &= ~bitMask; \
+            OWI_DDR |= bitMask; \
             OWI_PORT |= bitMask;
 
 #endif /* __1WIRE_H__ */
