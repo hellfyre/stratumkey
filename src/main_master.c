@@ -46,24 +46,6 @@ int main(void) {
     uint8_t presence = 0;
     presence = owi_detectpresence(_BV(WIREPIN));
     if (presence > 0) {
-      DDRB = _BV(PB6);
-      PORTB = _BV(PB6);
-      _delay_ms(500);
-      DDRB = 0;
-      PORTB = 0;
-      _delay_ms(500);
-      DDRB = _BV(PB6);
-      PORTB = _BV(PB6);
-      _delay_ms(500);
-      DDRB = 0;
-      PORTB = 0;
-      _delay_ms(500);
-      DDRB = _BV(PB6);
-      PORTB = _BV(PB6);
-      _delay_ms(500);
-      DDRB = 0;
-      PORTB = 0;
-      _delay_ms(500);
       owi_sendbyte(0xaf, _BV(WIREPIN));
     }
     _delay_ms(500);

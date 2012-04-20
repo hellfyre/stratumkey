@@ -45,7 +45,7 @@
 
 // 8-bit-state, MSB indicates read state
 #define STATE_RESET 0x00
-#define STATE_CHALLENGE 0x81
+#define STATE_CHALLENGE 0x01
 #define STATE_RESPONSE 0x02
 #define IS_READMODE(state) (state>>7)
 

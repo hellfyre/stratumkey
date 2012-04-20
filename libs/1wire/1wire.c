@@ -119,7 +119,7 @@ uint8_t owi_detectpresence(uint8_t pins)
   _delay_us(OWI_DELAY_I_STD_MODE);
 
   presence = (OWI_PIN & pins);
-  _delay_us(OWI_DELAY_F_STD_MODE);
+  _delay_us(OWI_DELAY_I_STD_MODE);
 
   SREG = intstate;
 
