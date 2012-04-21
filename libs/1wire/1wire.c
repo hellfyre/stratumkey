@@ -48,7 +48,7 @@ void owi_init(uint8_t pins)
 {
   lock &= ~(pins);
   OWI_RELEASE_BUS(pins);
-  _delay_us(OWI_DELAY_H_STD_MODE);
+  _delay_us(OWI_DELAY_H_STD_MODE); // 240us
 }
 
 void owi_writebit0(uint8_t pins)
@@ -59,10 +59,10 @@ void owi_writebit0(uint8_t pins)
   cli();
 
   OWI_PULL_BUS(pins);
-  _delay_us(OWI_DELAY_C_STD_MODE);
+  _delay_us(OWI_DELAY_C_STD_MODE); // 60us
 
   OWI_RELEASE_BUS(pins);
-  _delay_us(OWI_DELAY_D_STD_MODE);
+  _delay_us(OWI_DELAY_D_STD_MODE); // 10us
 
   SREG = intstate;
 }
@@ -75,10 +75,10 @@ void owi_writebit1(uint8_t pins)
   cli();
 
   OWI_PULL_BUS(pins);
-  _delay_us(OWI_DELAY_A_STD_MODE);
+  _delay_us(OWI_DELAY_A_STD_MODE); // 6us
 
   OWI_RELEASE_BUS(pins);
-  _delay_us(OWI_DELAY_B_STD_MODE);
+  _delay_us(OWI_DELAY_B_STD_MODE); // 64us
 
   SREG = intstate;
 }
@@ -91,13 +91,13 @@ uint8_t owi_readbit(uint8_t pins)
   cli();
 
   OWI_PULL_BUS(pins);
-  _delay_us(OWI_DELAY_A_STD_MODE);
+  _delay_us(OWI_DELAY_A_STD_MODE); // 6us
 
   OWI_RELEASE_BUS(pins);
-  _delay_us(OWI_DELAY_E_STD_MODE);
+  _delay_us(OWI_DELAY_E_STD_MODE); // 9us
 
   bitread = OWI_PIN & pins;
-  _delay_us(OWI_DELAY_F_STD_MODE);
+  _delay_us(OWI_DELAY_F_STD_MODE); // 55us
 
   SREG = intstate;
 
@@ -113,13 +113,13 @@ uint8_t owi_detectpresence(uint8_t pins)
   cli();
 
   OWI_PULL_BUS(pins);
-  _delay_us(OWI_DELAY_H_STD_MODE);
+  _delay_us(OWI_DELAY_H_STD_MODE); // 240us
 
   OWI_RELEASE_BUS(pins);
-  _delay_us(OWI_DELAY_I_STD_MODE);
+  _delay_us(OWI_DELAY_I_STD_MODE); // 70us
 
   presence = (OWI_PIN & pins);
-  _delay_us(OWI_DELAY_I_STD_MODE);
+  _delay_us(OWI_DELAY_I_STD_MODE); // 70us
 
   SREG = intstate;
 

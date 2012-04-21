@@ -13,39 +13,15 @@ uint8_t response[32];
 
 void challenge_response_cycle();
 
-/*
-SIGNAL(SIG_INTERRUPT0) {
-  cli();
-  MCUCR = 0;
-  GICR = 0;
-
-  DDRB = _BV(PB6);
-  PORTB = _BV(PB6);
-  OWI_DDR = _BV(WIREPIN);
-  OWI_PORT = _BV(WIREPIN);
-  _delay_ms(1000);
-  DDRB = 0;
-  PORTB = 0;
-  //challenge_response_cycle();
-  
-
-  sei();
-}
-*/
 
 int main(void) {
-  /*
-  MCUCR = _BV(ISC00);
-  GICR = _BV(INT0);
-  sei();
-  */
-
   owi_init(_BV(WIREPIN));
 
   while (1) {
     uint8_t presence = 0;
     presence = owi_detectpresence(_BV(WIREPIN));
     if (presence > 0) {
+      _delay_us(100);
       owi_sendbyte(0xaf, _BV(WIREPIN));
     }
     _delay_ms(500);
