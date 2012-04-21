@@ -21,9 +21,38 @@ int main(void) {
     uint8_t presence = 0;
     presence = owi_detectpresence(_BV(WIREPIN));
     if (presence > 0) {
-      _delay_us(100);
+      _delay_us(100); // IMPORTANT!!!!!!!!!!!
       owi_sendbyte(0xaf, _BV(WIREPIN));
+      owi_sendbyte(0x11, _BV(WIREPIN));
+      owi_sendbyte(0xac, _BV(WIREPIN));
+      owi_sendbyte(0x54, _BV(WIREPIN));
     }
+    _delay_us(150);
+
+    uint8_t i;
+    for (i=0; i<4; i++) {
+      response[i] = owi_receivebyte(_BV(WIREPIN));
+    }
+
+    if (response[0] == 0xaf) {
+      peak();
+      peak();
+    }
+    if (response[1] == 0x11) {
+      peak();
+      peak();
+      peak();
+    }
+    if (response[2] == 0xac) {
+      peak();
+      peak();
+    }
+    if (response[3] == 0x54) {
+      peak();
+      peak();
+      peak();
+    }
+
     _delay_ms(500);
   }
 
@@ -31,6 +60,14 @@ int main(void) {
   for (i=0; i<4; i++) {
     secret[i] = 0xaf;
   }
+}
+
+void peak() {
+  DDRB = _BV(PB6);
+  PORTB = _BV(PB6);
+  _delay_us(1);
+  DDRB = 0;
+  PORTB = 0;
 }
 
 void challenge_response_cycle() {

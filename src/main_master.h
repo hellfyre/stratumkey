@@ -13,4 +13,6 @@
 #define STATE_CHALLENGE 0x01
 #define STATE_RESPONSE 0x02
 
+void peak();
+
 #endif /*  __MAIN_MASTER_H__ */

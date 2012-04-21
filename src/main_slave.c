@@ -6,7 +6,7 @@
 #include <main_slave.h>
 #include <avrcryptolib/sha256.h>
 
-#define BITS 7
+#define BITS 31
 
 uint8_t state = STATE_RESET;
 uint8_t rxtx_buf[32];
@@ -15,13 +15,19 @@ uint8_t rxtx_buf_pos = 0;
 uint8_t bits_remaining;
 
 SIGNAL(SIG_INTERRUPT0) {
-  if (IS_READMODE(state)) {
+  if ( IS_READMODE(state) ) {
     uint8_t temp = rxtx_buf[rxtx_buf_pos] & 0x01;
+    cli();
 
     if (!temp) {
-      OWS_PULL_BUS(WIREPIN);
-      _delay_us(15);
-      OWS_RELEASE_BUS(WIREPIN);
+      //peak();
+      //OWS_PULL_BUS(_BV(WIREPIN));
+      DDRD = _BV(PD2);
+      PORTD = _BV(PD2);
+      _delay_us(40);
+      //OWS_RELEASE_BUS(_BV(WIREPIN));
+      DDRD = 0;
+      PORTD = 0;
     }
     rxtx_buf[rxtx_buf_pos] >>= 1;
 
@@ -30,8 +36,12 @@ SIGNAL(SIG_INTERRUPT0) {
     }
     else if ( (bits_remaining % 8) == 0 ) {
       rxtx_buf_pos++;
+      bits_remaining--;
     }
-    bits_remaining--;
+    else {
+      bits_remaining--;
+    }
+    sei();
   }
   else if (state > 0) {
     _delay_us(19);
@@ -48,8 +58,11 @@ SIGNAL(SIG_INTERRUPT0) {
     }
     else if ( (bits_remaining % 8) == 0 ) {
       rxtx_buf_pos++;
+      bits_remaining--;
     }
-    bits_remaining--;
+    else {
+      bits_remaining--;
+    }
   }
   else {
     ow_init();
@@ -102,6 +115,10 @@ void next_state() {
   if (state == STATE_CHALLENGE) {
     state = STATE_RESPONSE;
     bits_remaining = BITS;
+    rxtx_buf_pos = 0;
+  }
+  else if (state == STATE_RESPONSE) {
+    state = STATE_RESET;
   }
 }
 

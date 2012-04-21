@@ -2,18 +2,6 @@
 #define __MAIN_SLAVE_H__
 
 // One-wire bus definitions
-// Bit timing delays in us
-#define     OWS_DELAY_A_STD_MODE    6
-#define     OWS_DELAY_B_STD_MODE    64
-#define     OWS_DELAY_C_STD_MODE    60
-#define     OWS_DELAY_D_STD_MODE    10
-#define     OWS_DELAY_E_STD_MODE    9
-#define     OWS_DELAY_F_STD_MODE    55
-//#define     OWS_DELAY_G_STD_MODE  0
-#define     OWS_DELAY_H_STD_MODE    240
-#define     OWS_DELAY_I_STD_MODE    70
-#define     OWS_DELAY_J_STD_MODE    40
-
 // MCU specific defines
 #ifdef attiny13
 #define     OWS_PORT        PORTB
