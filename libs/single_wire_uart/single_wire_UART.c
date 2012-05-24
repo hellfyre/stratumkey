@@ -31,8 +31,8 @@
  * $Date: 2007-03-29 13:17:03 +0200 (to, 29 mar 2007) $  \n
  ******************************************************************************/
 
-#include <ioavr.h>              //Device specific register/Bit definitions.
-#include <inavr.h>              //The __enable_interrupt() intrinsic.
+#include <avr/io.h>              //Device specific register/Bit definitions.
+#include <avr/interrupt.h>              //The __enable_interrupt() intrinsic.
 #include "stdint.h"             //Integer types.
 #include "single_wire_UART.h"   //UART settings and device spesific.
 
