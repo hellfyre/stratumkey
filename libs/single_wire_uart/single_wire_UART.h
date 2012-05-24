@@ -92,14 +92,14 @@
 #define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMP_vect      //!< UART compare interrupt vector.
 
 /* Timer macros. These are device dependent. */
-#define CLEAR_UART_TIMER_ON_COMPARE_MATCH()     (TCCR0 |= (1<<WGM01))                             //!< Set timer control register to clear timer on compare match (CTC).
-#define SET_UART_TIMER_COMPARE_WAIT_ONE()       (OCR0 = WAIT_ONE)                                 //!< Sets the timer compare register to one period.
-#define SET_UART_TIMER_COMPARE_START_TRANSMIT() (OCR0 = WAIT_ONE - (TRANSMIT_DELAY/PRESCALER))    //!< Sets the timer compare register to the correct value when a transmission is started.
-#define SET_UART_TIMER_COMPARE_START_RECEIVE()  (OCR0 = WAIT_ONEHALF - (RECEIVE_DELAY/PRESCALER)) //!< Sets the timer compare register to the correct value when a reception is started.
-#define CLEAR_UART_TIMER()                      (TCNT0 = 0x00)
-#define ENABLE_UART_TIMER_INTERRUPT()           (TIMSK |= (1<<OCIE0))
-#define DISABLE_UART_TIMER_INTERRUPT()          (TIMSK &= ~(1<<OCIE0))
-#define CLEAR_UART_TIMER_INTERRUPT_FLAG()       (TIFR = (1<<OCF0))
+#define CLEAR_UART_TIMER_ON_COMPARE_MATCH()     (TCCR2 |= (1<<WGM21))                             //!< Set timer control register to clear timer on compare match (CTC).
+#define SET_UART_TIMER_COMPARE_WAIT_ONE()       (OCR2 = WAIT_ONE)                                 //!< Sets the timer compare register to one period.
+#define SET_UART_TIMER_COMPARE_START_TRANSMIT() (OCR2 = WAIT_ONE - (TRANSMIT_DELAY/PRESCALER))    //!< Sets the timer compare register to the correct value when a transmission is started.
+#define SET_UART_TIMER_COMPARE_START_RECEIVE()  (OCR2 = WAIT_ONEHALF - (RECEIVE_DELAY/PRESCALER)) //!< Sets the timer compare register to the correct value when a reception is started.
+#define CLEAR_UART_TIMER()                      (TCNT2 = 0x00)
+#define ENABLE_UART_TIMER_INTERRUPT()           (TIMSK |= (1<<OCIE2))
+#define DISABLE_UART_TIMER_INTERRUPT()          (TIMSK &= ~(1<<OCIE2))
+#define CLEAR_UART_TIMER_INTERRUPT_FLAG()       (TIFR = (1<<OCF2))
 
 /* External interrupt macros. These are device dependent. */
 #define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCUCR |= (1<<ISC01))   //< Sets falling edge of INT0 generates interrupt.
