@@ -39,8 +39,6 @@
 #define STATE_RESPONSE 0x82
 #define IS_READMODE(state) (state>>7)
 
-void ow_init();
-void next_state();
 void peak();
 void morse_byte(uint8_t data);
 void blink(uint8_t times);

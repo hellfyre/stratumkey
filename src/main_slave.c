@@ -3,74 +3,13 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
-#include <main_slave.h>
-#include <avrcryptolib/sha256.h>
-
-#define BITS 31
-
-uint8_t state = STATE_RESET;
-uint8_t rxtx_buf[32];
-uint8_t secret[32];
-uint8_t rxtx_buf_pos = 0;
-uint8_t bits_remaining;
-
-SIGNAL(SIG_INTERRUPT0) {
-  if ( IS_READMODE(state) ) {
-    uint8_t temp = rxtx_buf[rxtx_buf_pos] & 0x01;
-    cli();
-
-    if (!temp) {
-      //peak();
-      //OWS_PULL_BUS(_BV(WIREPIN));
-      DDRD = _BV(PD2);
-      PORTD = _BV(PD2);
-      _delay_us(40);
-      //OWS_RELEASE_BUS(_BV(WIREPIN));
-      DDRD = 0;
-      PORTD = 0;
-    }
-    rxtx_buf[rxtx_buf_pos] >>= 1;
-
-    if ( bits_remaining == 0 ) {
-      next_state();
-    }
-    else if ( (bits_remaining % 8) == 0 ) {
-      rxtx_buf_pos++;
-      bits_remaining--;
-    }
-    else {
-      bits_remaining--;
-    }
-    sei();
-  }
-  else if (state > 0) {
-    _delay_us(19);
-
-    rxtx_buf[rxtx_buf_pos] >>= 1;
-    uint8_t wire = OWS_PIN;
-
-    if ( (wire & _BV(WIREPIN)) != _BV(WIREPIN) ) {
-      rxtx_buf[rxtx_buf_pos] |= 0x80;
-    }
-
-    if ( bits_remaining == 0 ) {
-      next_state();
-    }
-    else if ( (bits_remaining % 8) == 0 ) {
-      rxtx_buf_pos++;
-      bits_remaining--;
-    }
-    else {
-      bits_remaining--;
-    }
-  }
-  else {
-    ow_init();
-  }
-
-}
+#include "main_slave.h"
+#include "single_wire_uart/single_wire_UART.h"
+#include "avrcryptolib/sha256.h"
 
 int main(void) {
+  uint8_t foobar = 0xaf;
+  /*
   MCUCR = _BV(ISC01) | _BV(ISC00);
 
   #ifdef attiny13
@@ -81,45 +20,11 @@ int main(void) {
   GICR = _BV(INT0);
   #endif
   sei();
+  */
 
-  while(1) {}
-}
+  SW_UART_Enable();
+  SW_UART_Transmit(foobar);
 
-void ow_init() {
-  uint8_t wire;
-  
-  cli();
-
-  _delay_us(160);
-  wire = OWS_PIN;
-
-  // if the wire is still high, then the master currently resets the bus, which
-  // is what we expect in STATE_RESET
-  if ( (wire & _BV(WIREPIN)) == _BV(WIREPIN) ) {
-    do { // wait for the master to release the bus
-      _delay_us(5);
-      wire = OWS_PIN;
-    } while ( (wire & _BV(WIREPIN)) == _BV(WIREPIN) );
-    
-    OWS_PULL_BUS(_BV(WIREPIN));
-    _delay_us(80);
-    OWS_RELEASE_BUS(_BV(WIREPIN));
-    sei();
-  }
-
-  state = STATE_CHALLENGE;
-  bits_remaining = BITS;
-}
-
-void next_state() {
-  if (state == STATE_CHALLENGE) {
-    state = STATE_RESPONSE;
-    bits_remaining = BITS;
-    rxtx_buf_pos = 0;
-  }
-  else if (state == STATE_RESPONSE) {
-    state = STATE_RESET;
-  }
 }
 
 void peak() {

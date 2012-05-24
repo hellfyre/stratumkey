@@ -14,5 +14,8 @@
 #define STATE_RESPONSE 0x02
 
 void peak();
+void morse_byte(uint8_t data);
+void blink(uint8_t times);
+void blink_long(uint8_t times);
 
 #endif /*  __MAIN_MASTER_H__ */

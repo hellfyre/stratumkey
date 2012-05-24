@@ -44,10 +44,10 @@
 
 /* Communication parameters. The WAIT_ONE definiton has to be changed according to equation 2-1 in the application note. */
 #define WAIT_ONE             103      //!< Half bit period compare setting. See the application note for calculation of this value. Make sure timer prescaler is set to the intended value.
-#define PRESCALER             1       //!< Prescaler setting. Must be set according to the baud rate setting.
+#define PRESCALER             8       //!< Prescaler setting. Must be set according to the baud rate setting.
 
 /* Port and pin settings. */
-#define SW_UART_PIN_NUMBER    2       //!< Set pin number for communication.
+#define SW_UART_PIN_NUMBER    PD2     //!< Set pin number for communication.
 #define SW_UART_PORT          PORTD   //!< Set port for communication.
 #define SW_UART_PIN           PIND    //!< Set pin for communication.
 #define SW_UART_DDR           DDRD    //!< Data direction register. Not available for high voltage ports.
