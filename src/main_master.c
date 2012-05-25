@@ -14,11 +14,16 @@ uint8_t response[32];
 int main(void) {
   uint8_t foobar;
 
+  sei();
   SW_UART_Enable();
 
-  while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
+  while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {
+    blink(1);
+  }
+  
   foobar = SW_UART_Receive();
   if (foobar == 0xaf) {
+    _delay_ms(500);
     blink(3);
   }
   else {
