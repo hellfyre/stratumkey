@@ -22,6 +22,7 @@ int main(void) {
   sei();
   */
 
+  sei();
   SW_UART_Enable();
   SW_UART_Transmit(foobar);
 
