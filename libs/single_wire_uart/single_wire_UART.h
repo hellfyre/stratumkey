@@ -43,27 +43,62 @@
 // Please note that the UART consumes about all CPU resources when WAIT_ONE*PRESCALER<100.
 
 /* Communication parameters. The WAIT_ONE definiton has to be changed according to equation 2-1 in the application note. */
+/* atmega8 8MHz */
+#ifdef atmega8
+#define WAIT_ONE             103      //!< Half bit period compare setting. See the application note for calculation of this value. Make sure timer prescaler is set to the intended value.
+#define PRESCALER             8       //!< Prescaler setting. Must be set according to the baud rate setting.
+#endif
+
+/* attiny85 1MHz */
+#ifdef attiny85
 #define WAIT_ONE             103      //!< Half bit period compare setting. See the application note for calculation of this value. Make sure timer prescaler is set to the intended value.
 #define PRESCALER             1       //!< Prescaler setting. Must be set according to the baud rate setting.
+#endif
 
 /* Port and pin settings. */
+/* atmega8 */
+#ifdef atmega8
 #define SW_UART_PIN_NUMBER    PD2     //!< Set pin number for communication.
 #define SW_UART_PORT          PORTD   //!< Set port for communication.
 #define SW_UART_PIN           PIND    //!< Set pin for communication.
 #define SW_UART_DDR           DDRD    //!< Data direction register. Not available for high voltage ports.
+#endif
+
+/* attiny85 */
+#ifdef attiny85
+#define SW_UART_PIN_NUMBER    PB3     //!< Set pin number for communication.
+#define SW_UART_PORT          PORTB   //!< Set port for communication.
+#define SW_UART_PIN           PINB    //!< Set pin for communication.
+#define SW_UART_DDR           DDRB    //!< Data direction register. Not available for high voltage ports.
+#endif
+
 
 #define TRANSMIT_DELAY        70    //!< Cycles from the start bit is sent (from UART_transmit) to the timer is started plus cycles in the timer interrupt before first data bit is sent.
 #define RECEIVE_DELAY         76    //!< Cycles from the start bit is detected to the timer is started plus cycles in timer interrupt before first data bit is received.
 
 #define WAIT_ONEHALF          (WAIT_ONE + WAIT_ONE/2)
 
-#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR0 //!< Define the timer control register according to the timer used for the UART.
+/* Timer prescaler device defines */
+/* atmega8 */
+#ifdef atmega8
+#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR2 //!< Define the timer control register according to the timer used for the UART.
+#define TIMER_PRESCALER_1                   CS20
+#define TIMER_PRESCALER_8                   CS21
+#endif
+
+/* attiny85 */
+#ifdef attiny85
+#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR0B //!< Define the timer control register according to the timer used for the UART.
+#define TIMER_PRESCALER_1                   CS00
+#define TIMER_PRESCALER_8                   CS01
+#endif
+
 #if (PRESCALER == 1)
-  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<CS00))  //Needs to be change if a different timer is used. Please refer to datasheet.
-  #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<CS00))
+  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_1))  //Needs to be change if a different timer is used. Please refer to datasheet.
+  #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<TIMER_PRESCALER_1))
 #elif (PRESCALER == 8)
-  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<CS01))
-  #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<CS01))
+  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_8))
+  #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<TIMER_PRESCALER_8))
 #else
   #error PRESCALER must be set to 1 or 8
 #endif
@@ -88,29 +123,39 @@
 //#define CLEAR_UART_PIN()        ( SW_UART_PORT |= (1<<SW_UART_PIN_NUMBER) ) //!< Set pin output low.
 
 /* UART interrupt vectors definitions. */
+#ifdef atmega8
+#define SW_UART_EXTERNAL_INTERRUPT_VECTOR       INT0_vect             //!< UART external interrupt vector. Make sure this is in accordance to the defined UART pin.
+#define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER2_COMP_vect      //!< UART compare interrupt vector.
+#endif
+
+#ifdef attiny85
 #define SW_UART_EXTERNAL_INTERRUPT_VECTOR       INT0_vect             //!< UART external interrupt vector. Make sure this is in accordance to the defined UART pin.
 #define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMP_vect      //!< UART compare interrupt vector.
+#endif
 
 /* Timer device defines */
 #define TIMER_INT_MASK    TIMSK
 #define TIMER_INT_FLAG    TIFR
 
-/* atmega8 */ /*
+/* atmega8 */
+#ifdef atmega8
 #define TIMER_CONTROL     TCCR2
 #define WAVEFORM_BIT      WGM21
 #define TIMER_COUNT       TCNT2
 #define OUTPUT_COMPARE    OCR2
 #define OUTPUT_COMP_INT   OCIE2
 #define OUTPUT_COMP_FLAG  OCF2
-*/
+#endif
 
 /* attiny85 */
+#ifdef attiny85
 #define TIMER_CONTROL     TCCR0A
 #define WAVEFORM_BIT      WGM01
 #define TIMER_COUNT       TCNT0
 #define OUTPUT_COMPARE    OCR0A
 #define OUTPUT_COMP_INT   OCIE0A
 #define OUTPUT_COMP_FLAG  OCF0A
+#endif
 
 /* Interrupt device defines */
 #define MCU_CONTROL       MCUCR
@@ -120,12 +165,14 @@
 #define EXT_INT_FLAG      INTF0
 
 /* atmega8 */
-/*
+#ifdef atmega8
 #define EN_EXT_INT        GICR
-*/
+#endif
 
 /* attiny85 */
+#ifdef attiny85
 #define EN_EXT_INT        GIMSK
+#endif
 
 /* Timer macros. These are device dependent. */
 #define CLEAR_UART_TIMER_ON_COMPARE_MATCH()     (TIMER_CONTROL |= (1<<WAVEFORM_BIT))                        //!< Set timer control register to clear timer on compare match (CTC).

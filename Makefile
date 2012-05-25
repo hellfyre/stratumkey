@@ -1,12 +1,12 @@
 ## target mcu; avr-gcc and avrdude usually have different mcu-names
-# attiny13, atmega8
+# attiny13, attiny85, atmega8
 MCU_SLAVE	= atmega8
-# t13, m8
+# t13, t85, m8
 DUDEMCU_SLAVE	= m8
 F_CPU_SLAVE = 8000000UL
 MCU_MASTER	= atmega8
 DUDEMCU_MASTER	= m8
-F_CPU_MASTER = 1000000UL
+F_CPU_MASTER = 8000000UL
 
 ## avrdude options
 DUDEPROGRAMMER	= dragon_isp
