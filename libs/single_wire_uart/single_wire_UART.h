@@ -44,7 +44,7 @@
 
 /* Communication parameters. The WAIT_ONE definiton has to be changed according to equation 2-1 in the application note. */
 #define WAIT_ONE             103      //!< Half bit period compare setting. See the application note for calculation of this value. Make sure timer prescaler is set to the intended value.
-#define PRESCALER             8       //!< Prescaler setting. Must be set according to the baud rate setting.
+#define PRESCALER             1       //!< Prescaler setting. Must be set according to the baud rate setting.
 
 /* Port and pin settings. */
 #define SW_UART_PIN_NUMBER    PD2     //!< Set pin number for communication.
@@ -91,21 +91,57 @@
 #define SW_UART_EXTERNAL_INTERRUPT_VECTOR       INT0_vect             //!< UART external interrupt vector. Make sure this is in accordance to the defined UART pin.
 #define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMP_vect      //!< UART compare interrupt vector.
 
+/* Timer device defines */
+#define TIMER_INT_MASK    TIMSK
+#define TIMER_INT_FLAG    TIFR
+
+/* atmega8 */ /*
+#define TIMER_CONTROL     TCCR2
+#define WAVEFORM_BIT      WGM21
+#define TIMER_COUNT       TCNT2
+#define OUTPUT_COMPARE    OCR2
+#define OUTPUT_COMP_INT   OCIE2
+#define OUTPUT_COMP_FLAG  OCF2
+*/
+
+/* attiny85 */
+#define TIMER_CONTROL     TCCR0A
+#define WAVEFORM_BIT      WGM01
+#define TIMER_COUNT       TCNT0
+#define OUTPUT_COMPARE    OCR0A
+#define OUTPUT_COMP_INT   OCIE0A
+#define OUTPUT_COMP_FLAG  OCF0A
+
+/* Interrupt device defines */
+#define MCU_CONTROL       MCUCR
+#define INT_FLAG          GIFR
+#define INT_SENSE         ISC01       //< Sets falling edge of INT0 generates interrupt.
+#define EXT_INT_BIT       INT0
+#define EXT_INT_FLAG      INTF0
+
+/* atmega8 */
+/*
+#define EN_EXT_INT        GICR
+*/
+
+/* attiny85 */
+#define EN_EXT_INT        GIMSK
+
 /* Timer macros. These are device dependent. */
-#define CLEAR_UART_TIMER_ON_COMPARE_MATCH()     (TCCR2 |= (1<<WGM21))                             //!< Set timer control register to clear timer on compare match (CTC).
-#define SET_UART_TIMER_COMPARE_WAIT_ONE()       (OCR2 = WAIT_ONE)                                 //!< Sets the timer compare register to one period.
-#define SET_UART_TIMER_COMPARE_START_TRANSMIT() (OCR2 = WAIT_ONE - (TRANSMIT_DELAY/PRESCALER))    //!< Sets the timer compare register to the correct value when a transmission is started.
-#define SET_UART_TIMER_COMPARE_START_RECEIVE()  (OCR2 = WAIT_ONEHALF - (RECEIVE_DELAY/PRESCALER)) //!< Sets the timer compare register to the correct value when a reception is started.
-#define CLEAR_UART_TIMER()                      (TCNT2 = 0x00)
-#define ENABLE_UART_TIMER_INTERRUPT()           (TIMSK |= (1<<OCIE2))
-#define DISABLE_UART_TIMER_INTERRUPT()          (TIMSK &= ~(1<<OCIE2))
-#define CLEAR_UART_TIMER_INTERRUPT_FLAG()       (TIFR = (1<<OCF2))
+#define CLEAR_UART_TIMER_ON_COMPARE_MATCH()     (TIMER_CONTROL |= (1<<WAVEFORM_BIT))                        //!< Set timer control register to clear timer on compare match (CTC).
+#define SET_UART_TIMER_COMPARE_WAIT_ONE()       (OUTPUT_COMPARE = WAIT_ONE)                                 //!< Sets the timer compare register to one period.
+#define SET_UART_TIMER_COMPARE_START_TRANSMIT() (OUTPUT_COMPARE = WAIT_ONE - (TRANSMIT_DELAY/PRESCALER))    //!< Sets the timer compare register to the correct value when a transmission is started.
+#define SET_UART_TIMER_COMPARE_START_RECEIVE()  (OUTPUT_COMPARE = WAIT_ONEHALF - (RECEIVE_DELAY/PRESCALER)) //!< Sets the timer compare register to the correct value when a reception is started.
+#define CLEAR_UART_TIMER()                      (TIMER_COUNT = 0x00)
+#define ENABLE_UART_TIMER_INTERRUPT()           (TIMER_INT_MASK |= (1<<OUTPUT_COMP_INT))
+#define DISABLE_UART_TIMER_INTERRUPT()          (TIMER_INT_MASK &= ~(1<<OUTPUT_COMP_INT))
+#define CLEAR_UART_TIMER_INTERRUPT_FLAG()       (TIMER_INT_FLAG = (1<<OUTPUT_COMP_FLAG))
 
 /* External interrupt macros. These are device dependent. */
-#define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCUCR |= (1<<ISC01))   //< Sets falling edge of INT0 generates interrupt.
-#define ENABLE_UART_EXTERNAL_INTERRUPT()        (GICR |= (1<<INT0))
-#define DISABLE_UART_EXTERNAL_INTERRUPT()       (GICR &= ~(1<<INT0))
-#define CLEAR_UART_EXTERNAL_INTERRUPT_FLAG()    (GIFR = (1<<INTF0))
+#define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCU_CONTROL |= (1<<INT_SENSE))   //< Sets falling edge of EXT_INT_BIT generates interrupt.
+#define ENABLE_UART_EXTERNAL_INTERRUPT()        (EN_EXT_INT |= (1<<EXT_INT_BIT))
+#define DISABLE_UART_EXTERNAL_INTERRUPT()       (EN_EXT_INT &= ~(1<<EXT_INT_BIT))
+#define CLEAR_UART_EXTERNAL_INTERRUPT_FLAG()    (INT_FLAG = (1<<EXT_INT_FLAG))
 
 /* Status register defines. */
 #define SW_UART_TX_BUFFER_FULL        4     //!< Set if data is ready to be sent from the Tx buffer.
