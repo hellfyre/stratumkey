@@ -171,7 +171,7 @@ uint8_t SW_UART_Receive(void)
  *  the first data bit to be received.
  */
 #pragma vector=SW_UART_EXTERNAL_INTERRUPT_VECTOR
-__interrupt void External_SW_UART_ISR(void)
+SIGNAL(SIG_INTERRUPT0)
 {
   //Make sure bit is low.
   if(!READ_UART_PIN())
@@ -201,7 +201,7 @@ __interrupt void External_SW_UART_ISR(void)
  *          so an interrupt is not missed.
  */
 #pragma vector=SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR
-__interrupt void Timer_SW_UART_ISR(void)
+SIGNAL(SIG_OUTPUT_COMPARE2)
 {
   SET_UART_TIMER_COMPARE_WAIT_ONE(); //Set timer compare value to trigger the ISR once every bit period.
 
