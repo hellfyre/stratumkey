@@ -17,17 +17,19 @@ int main(void) {
   sei();
   SW_UART_Enable();
 
-  while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {
-    //blink(1);
-  }
-  
-  foobar = SW_UART_Receive();
-  if (foobar == 0xaf) {
-    _delay_ms(500);
-    blink(3);
-  }
-  else {
-    blink(1);
+  while(1) {
+    while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {
+      //blink(1);
+    }
+    
+    foobar = SW_UART_Receive();
+    if (foobar == 0xaf) {
+      //_delay_ms(500);
+      blink(3);
+    }
+    else {
+      blink(2);
+    }
   }
 }
 

@@ -8,8 +8,6 @@
 #include "avrcryptolib/sha256.h"
 
 int main(void) {
-  DDRB = _BV(PB6);
-  PORTB = _BV(PB6);
   uint8_t foobar = 0xaf;
   /*
   MCUCR = _BV(ISC01) | _BV(ISC00);
@@ -24,12 +22,12 @@ int main(void) {
   sei();
   */
 
-  /*
   sei();
   SW_UART_Enable();
-  _delay_ms(500);
-  SW_UART_Transmit(foobar);
-  */
+  while(1) {
+    _delay_ms(5);
+    SW_UART_Transmit(foobar);
+  }
 
 }
 
