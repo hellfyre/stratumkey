@@ -25,7 +25,7 @@ int main(void) {
   sei();
   SW_UART_Enable();
   while(1) {
-    _delay_ms(5);
+    _delay_ms(500);
     SW_UART_Transmit(foobar);
   }
 
