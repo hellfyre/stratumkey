@@ -7,31 +7,31 @@
 #include "single_wire_uart/single_wire_UART.h"
 #include "avrcryptolib/sha256.h"
 
-int main(void) {
-  uint8_t foobar = 0xaf;
-  /*
-  MCUCR = _BV(ISC01) | _BV(ISC00);
+uint8_t challenge[32];
 
-  #ifdef attiny13
-  GIMSK = _BV(PCIE);
-  PCMSK = _BV(PCINT0);
-  #endif
-  #ifdef atmega8
-  GICR = _BV(INT0);
-  #endif
-  sei();
-  */
+int main(void) {
+  uint8_t buffer;
 
   sei();
   SW_UART_Enable();
-  while(1) {
-    _delay_ms(500);
-    SW_UART_Transmit(foobar);
+
+  SW_UART_Transmit(0x00);
+  
+  int i;
+  for (i=0; i<32; i++) {
+    while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
+    challenge[i] = SW_UART_Receive();
   }
+
+  blink(1);
+
+  if (challenge[0] == 0xaa) blink(1);
+  if (challenge[1] == 0xbb) blink(2);
+  if (challenge[2] == 0xcc) blink(3);
+  if (challenge[3] == 0xdd) blink(4);
 
 }
 
-/*
 void peak() {
   DDRB = _BV(PB6);
   PORTB = _BV(PB6);
@@ -89,4 +89,3 @@ void blink_long(uint8_t times) {
   }
   _delay_ms(2000);
 }
-*/
