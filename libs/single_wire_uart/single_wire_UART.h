@@ -55,6 +55,12 @@
 #define PRESCALER             1       //!< Prescaler setting. Must be set according to the baud rate setting.
 #endif
 
+/* attiny13 1MHz */
+#ifdef attiny13
+#define WAIT_ONE             103      //!< Half bit period compare setting. See the application note for calculation of this value. Make sure timer prescaler is set to the intended value.
+#define PRESCALER             1       //!< Prescaler setting. Must be set according to the baud rate setting.
+#endif
+
 /* Port and pin settings. */
 /* atmega8 */
 #ifdef atmega8
@@ -66,6 +72,14 @@
 
 /* attiny85 */
 #ifdef attiny85
+#define SW_UART_PIN_NUMBER    PB3     //!< Set pin number for communication.
+#define SW_UART_PORT          PORTB   //!< Set port for communication.
+#define SW_UART_PIN           PINB    //!< Set pin for communication.
+#define SW_UART_DDR           DDRB    //!< Data direction register. Not available for high voltage ports.
+#endif
+
+/* attiny13 */
+#ifdef attiny13
 #define SW_UART_PIN_NUMBER    PB3     //!< Set pin number for communication.
 #define SW_UART_PORT          PORTB   //!< Set port for communication.
 #define SW_UART_PIN           PINB    //!< Set pin for communication.
@@ -88,6 +102,13 @@
 
 /* attiny85 */
 #ifdef attiny85
+#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR0B //!< Define the timer control register according to the timer used for the UART.
+#define TIMER_PRESCALER_1                   CS00
+#define TIMER_PRESCALER_8                   CS01
+#endif
+
+/* attiny13 */
+#ifdef attiny13
 #define TIMER_PRESCALER_CONTROL_REGISTER    TCCR0B //!< Define the timer control register according to the timer used for the UART.
 #define TIMER_PRESCALER_1                   CS00
 #define TIMER_PRESCALER_8                   CS01
@@ -133,6 +154,11 @@
 #define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMP_vect      //!< UART compare interrupt vector.
 #endif
 
+#ifdef attiny13
+#define SW_UART_EXTERNAL_INTERRUPT_VECTOR       INT0_vect             //!< UART external interrupt vector. Make sure this is in accordance to the defined UART pin.
+#define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMP_vect      //!< UART compare interrupt vector.
+#endif
+
 /* Timer device defines */
 #define TIMER_INT_MASK    TIMSK
 #define TIMER_INT_FLAG    TIFR
@@ -157,6 +183,16 @@
 #define OUTPUT_COMP_FLAG  OCF0A
 #endif
 
+/* attiny13 */
+#ifdef attiny13
+#define TIMER_CONTROL     TCCR0A
+#define WAVEFORM_BIT      WGM01
+#define TIMER_COUNT       TCNT0
+#define OUTPUT_COMPARE    OCR0A
+#define OUTPUT_COMP_INT   OCIE0A
+#define OUTPUT_COMP_FLAG  OCF0A
+#endif
+
 /* Interrupt device defines */
 #define MCU_CONTROL       MCUCR
 #define INT_FLAG          GIFR
@@ -171,6 +207,11 @@
 
 /* attiny85 */
 #ifdef attiny85
+#define EN_EXT_INT        GIMSK
+#endif
+
+/* attiny13 */
+#ifdef attiny13
 #define EN_EXT_INT        GIMSK
 #endif
 
