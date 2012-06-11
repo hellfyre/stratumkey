@@ -37,10 +37,9 @@ int main(void) {
     }
     */
 
-    challenge[0] = 0xaa;
-    challenge[1] = 0xbb;
-    challenge[2] = 0xcc;
-    challenge[3] = 0xdd;
+    for (i=0; i<32; i++) {
+      challenge[i] = i+7;
+    }
 
     for (i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);

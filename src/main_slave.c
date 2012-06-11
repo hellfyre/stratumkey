@@ -25,10 +25,11 @@ int main(void) {
 
   blink(1);
 
-  if (challenge[0] == 0xaa) blink(4);
-  if (challenge[1] == 0xbb) blink(3);
-  if (challenge[2] == 0xcc) blink(2);
-  if (challenge[3] == 0xdd) blink(1);
+  int challenge_correct = 0;
+  for (i=0; i<32; i++) {
+    if (challenge[i] == i+7) challenge_correct++;
+  }
+  if (challenge_correct == 32) blink(3);
 
 }
 
