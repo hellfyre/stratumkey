@@ -12,22 +12,22 @@ uint8_t challenge[32];
 uint8_t response[32];
 
 int main(void) {
-  uint8_t buffer;
+  uint8_t buffer = 0x00;
 
   sei();
   SW_UART_Enable();
 
   while(1) {
-    while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
-
-    buffer = SW_UART_Receive();
-    /*
-    if (buffer != 0x99) {
-      continue;
+    while(buffer != 0x99) {
+      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
+      buffer = SW_UART_Receive();
     }
-    */
+    buffer = 0x00;
+
+    blink(2);
 
     int i, j;
+    /*
     for (i=0; i<8; i++) {
       uint32_t random_single = random();
       for (j=(i*4); j<(i+1)*4; j++) {
@@ -35,6 +35,8 @@ int main(void) {
         random_single >>= 8;
       }
     }
+    */
+
     challenge[0] = 0xaa;
     challenge[1] = 0xbb;
     challenge[2] = 0xcc;
@@ -42,7 +44,9 @@ int main(void) {
 
     for (i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);
+      _delay_ms(1);
     }
+    _delay_ms(2000);
   }
 }
 
