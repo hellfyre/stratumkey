@@ -3,62 +3,46 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
-#include <main_master.h>
-#include <1wire/1wire.h>
-#include <avrcryptolib/sha256.h>
+#include "main_master.h"
+#include "single_wire_uart/single_wire_UART.h"
+#include "avrcryptolib/sha256.h"
 
 uint8_t secret[32];
 uint8_t challenge[32];
 uint8_t response[32];
 
-void challenge_response_cycle();
-
-
 int main(void) {
-  owi_init(_BV(WIREPIN));
+  uint8_t buffer;
 
-  while (1) {
-    uint8_t presence = 0;
-    presence = owi_detectpresence(_BV(WIREPIN));
-    if (presence > 0) {
-      _delay_us(100); // IMPORTANT!!!!!!!!!!!
-      owi_sendbyte(0xaf, _BV(WIREPIN));
-      owi_sendbyte(0x11, _BV(WIREPIN));
-      owi_sendbyte(0xac, _BV(WIREPIN));
-      owi_sendbyte(0x54, _BV(WIREPIN));
-    }
-    _delay_us(150);
+  sei();
+  SW_UART_Enable();
 
-    uint8_t i;
-    for (i=0; i<4; i++) {
-      response[i] = owi_receivebyte(_BV(WIREPIN));
-    }
+  while(1) {
+    while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
 
-    if (response[0] == 0xaf) {
-      peak();
-      peak();
+    buffer = SW_UART_Receive();
+    /*
+    if (buffer != 0x99) {
+      continue;
     }
-    if (response[1] == 0x11) {
-      peak();
-      peak();
-      peak();
-    }
-    if (response[2] == 0xac) {
-      peak();
-      peak();
-    }
-    if (response[3] == 0x54) {
-      peak();
-      peak();
-      peak();
-    }
+    */
 
-    _delay_ms(500);
-  }
+    int i, j;
+    for (i=0; i<8; i++) {
+      uint32_t random_single = random();
+      for (j=(i*4); j<(i+1)*4; j++) {
+        challenge[j] = random_single & 0xff;
+        random_single >>= 8;
+      }
+    }
+    challenge[0] = 0xaa;
+    challenge[1] = 0xbb;
+    challenge[2] = 0xcc;
+    challenge[3] = 0xdd;
 
-  int i;
-  for (i=0; i<4; i++) {
-    secret[i] = 0xaf;
+    for (i=0; i<32; i++) {
+      SW_UART_Transmit(challenge[i]);
+    }
   }
 }
 
@@ -70,44 +54,52 @@ void peak() {
   PORTB = 0;
 }
 
-void challenge_response_cycle() {
-  uint8_t presence = 0;
-  presence = owi_detectpresence(_BV(WIREPIN));
-  if (presence > 0) {
+void morse_byte(uint8_t data) {
+  int i;
+  for (i=0; i<8; i++) {
+    uint8_t temp = data & 0x01;
+    if (temp) {
+      DDRB = _BV(PB6);
+      PORTB = _BV(PB6);
+      _delay_us(50);
+      DDRB = 0;
+      PORTB = 0;
+      _delay_us(10);
+    }
+    else {
+      DDRB = _BV(PB6);
+      PORTB = _BV(PB6);
+      _delay_us(10);
+      DDRB = 0;
+      PORTB = 0;
+      _delay_us(50);
+    }
+    data >>= 1;
+  }
+}
+
+void blink(uint8_t times) {
+  int i;
+  for (i=0; i<times; i++) {
     DDRB = _BV(PB6);
     PORTB = _BV(PB6);
-    _delay_ms(1000);
+    _delay_ms(500);
+    DDRB = 0;
     PORTB = 0;
-    _delay_ms(1000);
+    _delay_ms(500);
   }
+  _delay_ms(500);
+}
 
-  // TODO check return value of owi_detectpresence
-
-  // generate random challenge
-  int i,j;
-  for (i=0; i<8; i++) {
-    unsigned long random_single = random();
-    for (j=(i*4); j<(i*4+4); j++) {
-      challenge[j] = random_single & 0xff;
-      random_single >>= 8;
-    }
+void blink_long(uint8_t times) {
+  int i;
+  for (i=0; i<times; i++) {
+    DDRB = _BV(PB6);
+    PORTB = _BV(PB6);
+    _delay_ms(2000);
+    DDRB = 0;
+    PORTB = 0;
+    _delay_ms(2000);
   }
-
-  // send challenge
-  for (i=0; i<32; i++) {
-    owi_sendbyte(challenge[i], _BV(WIREPIN));
-  }
-
-  // wait for the slave to process the challenge
-  // TODO count instructions on slave
-  _delay_us(20);
-
-  // receive response
-  for (i=0; i<32; i++) {
-    response[i] = owi_receivebyte(_BV(WIREPIN));
-  }
-
-  // TODO check response
-  // like this: if $response = $(sha256($secret & $challenge [& $random_slave])
-  // $random_slave isn't actually needed, it's just plain paranoia
+  _delay_ms(2000);
 }
