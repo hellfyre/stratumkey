@@ -31,6 +31,11 @@ int main(void) {
   }
   if (challenge_correct == 32) blink(3);
 
+  for (i=0; i<32; i++) {
+    SW_UART_Transmit(challenge[i]);
+    _delay_ms(10);
+  }
+
 }
 
 void peak() {

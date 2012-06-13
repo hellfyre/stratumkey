@@ -43,9 +43,24 @@ int main(void) {
 
     for (i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);
-      _delay_ms(1);
+      _delay_ms(10);
     }
     _delay_ms(2000);
+
+
+    for (i=0; i<32; i++) {
+      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
+      response[i] = SW_UART_Receive();
+    }
+
+    blink(1);
+
+    int response_correct = 0;
+    for (i=0; i<32; i++) {
+      if (response[i] == challenge[i]) response_correct++;
+    }
+    if (response_correct == 32) blink(3);
+    else blink(1);
   }
 }
 
