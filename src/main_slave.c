@@ -8,6 +8,8 @@
 #include "avrcryptolib/sha256.h"
 
 uint8_t challenge[32];
+uint8_t secret[32];
+uint8_t response[32];
 
 int main(void) {
   uint8_t buffer;
@@ -19,15 +21,23 @@ int main(void) {
   
   int i;
   for (i=0; i<32; i++) {
+    secret[i] = i%4;
+  }
+
+  for (i=0; i<32; i++) {
     while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
     challenge[i] = SW_UART_Receive();
+  }
+
+  for (i=0; i<32; i++) {
+    response[i] = challenge[i] ^ secret[i];
   }
 
   blink(1);
 
   for (i=0; i<32; i++) {
-    SW_UART_Transmit(challenge[i]);
-    _delay_ms(10);
+    SW_UART_Transmit(response[i]);
+    _delay_ms(2);
   }
 
 }

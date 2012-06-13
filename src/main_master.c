@@ -27,6 +27,10 @@ int main(void) {
     blink(2);
 
     int i, j;
+    for (i=0; i<32; i++) {
+      secret[i] = i%4;
+    }
+
     for (i=0; i<8; i++) {
       uint32_t random_single = random();
       for (j=(i*4); j<(i+1)*4; j++) {
@@ -37,7 +41,7 @@ int main(void) {
 
     for (i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);
-      _delay_ms(10);
+      _delay_ms(2);
     }
     _delay_ms(1000);
 
@@ -51,7 +55,7 @@ int main(void) {
 
     int response_correct = 0;
     for (i=0; i<32; i++) {
-      if (response[i] == challenge[i]) response_correct++;
+      if (response[i] ^ secret[i] == challenge[i]) response_correct++;
     }
     if (response_correct == 32) blink(3);
     else blink(1);
