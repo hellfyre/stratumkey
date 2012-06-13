@@ -226,9 +226,11 @@
 #define CLEAR_UART_TIMER_INTERRUPT_FLAG()       (TIMER_INT_FLAG = (1<<OUTPUT_COMP_FLAG))
 
 /* External interrupt macros. These are device dependent. */
-#define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCU_CONTROL |= (1<<INT_SENSE))   //< Sets falling edge of EXT_INT_BIT generates interrupt.
-#define ENABLE_UART_EXTERNAL_INTERRUPT()        (EN_EXT_INT |= (1<<EXT_INT_BIT))
-#define DISABLE_UART_EXTERNAL_INTERRUPT()       (EN_EXT_INT &= ~(1<<EXT_INT_BIT))
+#define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCU_CONTROL |= (1<<INT_SENSE)) \
+						(INT_FLAG = (1<<EXT_INT_FLAG))  //< Sets falling edge of EXT_INT_BIT generates interrupt.
+#define ENABLE_UART_EXTERNAL_INTERRUPT()       	(INT_FLAG = (1<<EXT_INT_FLAG)) \  // clear interrupt flag befor enabling it
+						(EN_EXT_INT |= (1<<EXT_INT_BIT)) 
+#define DISABLE_UART_EXTERNAL_INTERRUPT()       (EN_EXT_INT &= ~(1<<EXT_INT_BIT) )
 #define CLEAR_UART_EXTERNAL_INTERRUPT_FLAG()    (INT_FLAG = (1<<EXT_INT_FLAG))
 
 /* Status register defines. */
