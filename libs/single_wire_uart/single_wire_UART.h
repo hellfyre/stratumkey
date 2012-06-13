@@ -227,8 +227,8 @@
 
 /* External interrupt macros. These are device dependent. */
 #define INITIALIZE_UART_EXTERNAL_INTERRUPT()    (MCU_CONTROL |= (1<<INT_SENSE)); \
-						(INT_FLAG = (1<<EXT_INT_FLAG))  //< Sets falling edge of EXT_INT_BIT generates interrupt.
-#define ENABLE_UART_EXTERNAL_INTERRUPT()       	(INT_FLAG = (1<<EXT_INT_FLAG)); \  
+						(INT_FLAG = (1<<EXT_INT_FLAG))  //< Sets falling edge of EXT_INT_BIT generates interrupt
+#define ENABLE_UART_EXTERNAL_INTERRUPT()       	(INT_FLAG = (1<<EXT_INT_FLAG)); \
 						(EN_EXT_INT |= (1<<EXT_INT_BIT)) // clear interrupt flag befor enabling it
 #define DISABLE_UART_EXTERNAL_INTERRUPT()       (EN_EXT_INT &= ~(1<<EXT_INT_BIT) )
 #define CLEAR_UART_EXTERNAL_INTERRUPT_FLAG()    (INT_FLAG = (1<<EXT_INT_FLAG))
