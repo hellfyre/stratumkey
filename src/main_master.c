@@ -27,7 +27,6 @@ int main(void) {
     blink(2);
 
     int i, j;
-    /*
     for (i=0; i<8; i++) {
       uint32_t random_single = random();
       for (j=(i*4); j<(i+1)*4; j++) {
@@ -35,17 +34,12 @@ int main(void) {
         random_single >>= 8;
       }
     }
-    */
-
-    for (i=0; i<32; i++) {
-      challenge[i] = i+7;
-    }
 
     for (i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);
       _delay_ms(10);
     }
-    _delay_ms(2000);
+    _delay_ms(1000);
 
 
     for (i=0; i<32; i++) {

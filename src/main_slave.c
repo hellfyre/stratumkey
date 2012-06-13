@@ -25,12 +25,6 @@ int main(void) {
 
   blink(1);
 
-  int challenge_correct = 0;
-  for (i=0; i<32; i++) {
-    if (challenge[i] == i+7) challenge_correct++;
-  }
-  if (challenge_correct == 32) blink(3);
-
   for (i=0; i<32; i++) {
     SW_UART_Transmit(challenge[i]);
     _delay_ms(10);
