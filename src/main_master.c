@@ -11,11 +11,15 @@
 
 uint8_t challenge[32];
 uint8_t response[32];
-uint8_t hash[32];
+sha256_hash_t hash;
+uint8_t *secrets[32];
+uint16_t id;
 
 int main(void) {
   SETSECRET
   uint8_t buffer = 0x00;
+
+  secrets[13] = secret_v;
 
   sei();
   SW_UART_Enable();
@@ -33,18 +37,17 @@ int main(void) {
     /*----- DEBUG: Confirm start condition -----*/
     blink(2);
 
-    int i, j;
     /*----- Generate random challenge -----*/
-    for (i=0; i<8; i++) {
+    for (int i=0; i<8; i++) {
       uint32_t random_single = random();
-      for (j=(i*4); j<(i+1)*4; j++) {
+      for (int j=(i*4); j<(i+1)*4; j++) {
         challenge[j] = random_single & 0xff;
         random_single >>= 8;
       }
     }
 
     /*----- Transmit challenge -----*/
-    for (i=0; i<32; i++) {
+    for (int i=0; i<32; i++) {
       SW_UART_Transmit(challenge[i]);
       _delay_ms(2);
     }
@@ -52,8 +55,20 @@ int main(void) {
     _delay_ms(1000);
 
 
+    /*----- Receive ID -----*/
+    id = 0;
+    for (int i=1; i>=0; i--) {
+      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
+      id ^= SW_UART_Receive();
+      id <<= i*8;
+    }
+    /*----- Sanity check -----*/
+    if (id > 0xffff) continue;
+    if (secrets[id] == NULL) continue;
+    if (id != 13) blink(5);
+
     /*----- Receive response -----*/
-    for (i=0; i<32; i++) {
+    for (int i=0; i<32; i++) {
       while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
       response[i] = SW_UART_Receive();
     }
@@ -62,15 +77,14 @@ int main(void) {
     blink(1);
 
     /*----- AND challenge and secret and hash the result -----*/
-    //TODO pick secret based on id sent by slave
-    for (i=0; i<32; i++) {
-      challenge[i] &= secret[i];
+    for (int i=0; i<32; i++) {
+      challenge[i] &= secrets[id][i];
     }
-    sha256(hash, challenge, 256);
+    sha256(&hash, challenge, 256);
 
     /*----- Check response -----*/
     int response_correct = 0;
-    for (i=0; i<32; i++) {
+    for (int i=0; i<32; i++) {
       if (response[i] == hash[i]) response_correct++;
     }
     if (response_correct == 32) blink(3);
@@ -87,8 +101,7 @@ void peak() {
 }
 
 void morse_byte(uint8_t data) {
-  int i;
-  for (i=0; i<8; i++) {
+  for (int i=0; i<8; i++) {
     uint8_t temp = data & 0x01;
     if (temp) {
       DDRB = _BV(PB6);
@@ -111,8 +124,7 @@ void morse_byte(uint8_t data) {
 }
 
 void blink(uint8_t times) {
-  int i;
-  for (i=0; i<times; i++) {
+  for (int i=0; i<times; i++) {
     DDRB = _BV(PB6);
     PORTB = _BV(PB6);
     _delay_ms(500);
@@ -124,8 +136,7 @@ void blink(uint8_t times) {
 }
 
 void blink_long(uint8_t times) {
-  int i;
-  for (i=0; i<times; i++) {
+  for (int i=0; i<times; i++) {
     DDRB = _BV(PB6);
     PORTB = _BV(PB6);
     _delay_ms(2000);

@@ -10,11 +10,16 @@
 #include "secret.h"
 
 uint8_t challenge[32];
-uint8_t response[32];
+//uint8_t response[32];
+uint8_t id[2];
+uint8_t *secret;
+sha256_hash_t hash;
 
 int main(void) {
   SETSECRET
-  uint8_t buffer;
+  secret = secret_v;
+  id[0] = 0;
+  id[1] = 13;
 
   sei();
   SW_UART_Enable();
@@ -22,9 +27,8 @@ int main(void) {
   /*----- Send start condition -----*/
   SW_UART_Transmit(0x99);
   
-  int i;
   /*----- Receive challenge -----*/
-  for (i=0; i<32; i++) {
+  for (int i=0; i<32; i++) {
     while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
     challenge[i] = SW_UART_Receive();
   }
@@ -33,14 +37,19 @@ int main(void) {
   blink(1);
 
   /*----- AND challenge and secret and hash the result -----*/
-  for (i=0; i<32; i++) {
+  for (int i=0; i<32; i++) {
     challenge[i] &= secret[i];
   }
-  sha256(response, challenge, 256);
+  sha256(&hash, challenge, 256);
 
+  /*----- Transmit ID -----*/
+  for (int i=0; i<2; i++) {
+    SW_UART_Transmit(id[i]);
+    _delay_ms(2);
+  }
   /*----- Transmit response -----*/
-  for (i=0; i<32; i++) {
-    SW_UART_Transmit(response[i]);
+  for (int i=0; i<32; i++) {
+    SW_UART_Transmit(hash[i]);
     _delay_ms(2);
   }
 
@@ -55,8 +64,7 @@ void peak() {
 }
 
 void morse_byte(uint8_t data) {
-  int i;
-  for (i=0; i<8; i++) {
+  for (int i=0; i<8; i++) {
     uint8_t temp = data & 0x01;
     if (temp) {
       DDRB = _BV(PB6);
@@ -79,8 +87,7 @@ void morse_byte(uint8_t data) {
 }
 
 void blink(uint8_t times) {
-  int i;
-  for (i=0; i<times; i++) {
+  for (int i=0; i<times; i++) {
     DDRB = _BV(PB6);
     PORTB = _BV(PB6);
     _delay_ms(500);
@@ -92,8 +99,7 @@ void blink(uint8_t times) {
 }
 
 void blink_long(uint8_t times) {
-  int i;
-  for (i=0; i<times; i++) {
+  for (int i=0; i<times; i++) {
     DDRB = _BV(PB6);
     PORTB = _BV(PB6);
     _delay_ms(2000);
