@@ -11,6 +11,7 @@
 
 uint8_t challenge[32];
 uint8_t response[32];
+uint8_t hash[32];
 
 int main(void) {
   SETSECRET
@@ -51,9 +52,15 @@ int main(void) {
 
     blink(1);
 
+    //TODO pick secret based on id sent by slave
+    for (i=0; i<32; i++) {
+      challenge[i] &= secret[i];
+    }
+    sha256(hash, challenge, 256);
+
     int response_correct = 0;
     for (i=0; i<32; i++) {
-      if (response[i] ^ secret[i] == challenge[i]) response_correct++;
+      if (response[i] == hash[i]) response_correct++;
     }
     if (response_correct == 32) blink(3);
     else blink(1);

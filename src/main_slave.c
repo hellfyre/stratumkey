@@ -28,9 +28,9 @@ int main(void) {
   }
 
   for (i=0; i<32; i++) {
-    response[i] = challenge[i] ^ secret[i];
+    challenge[i] &= secret[i];
   }
-  //sha256(response, challenge, 256);
+  sha256(response, challenge, 256);
 
   blink(1);
 
