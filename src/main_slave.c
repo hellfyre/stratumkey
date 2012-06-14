@@ -19,21 +19,26 @@ int main(void) {
   sei();
   SW_UART_Enable();
 
+  /*----- Send start condition -----*/
   SW_UART_Transmit(0x99);
   
   int i;
+  /*----- Receive challenge -----*/
   for (i=0; i<32; i++) {
     while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
     challenge[i] = SW_UART_Receive();
   }
 
+  /*----- DEBUG: Confirm reception of challenge -----*/
+  blink(1);
+
+  /*----- AND challenge and secret and hash the result -----*/
   for (i=0; i<32; i++) {
     challenge[i] &= secret[i];
   }
   sha256(response, challenge, 256);
 
-  blink(1);
-
+  /*----- Transmit response -----*/
   for (i=0; i<32; i++) {
     SW_UART_Transmit(response[i]);
     _delay_ms(2);
