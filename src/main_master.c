@@ -3,12 +3,13 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
-#include "main_master.h"
 #include "single_wire_uart/single_wire_UART.h"
 #include "single_wire_uart/swu_highlevel.h"
 #include "avrcryptolib/sha256.h"
 
 #include "secret.h"
+
+void blink(uint8_t times);
 
 uint8_t challenge[32];
 uint8_t response[32];
@@ -76,37 +77,6 @@ int main(void) {
   }
 }
 
-void peak() {
-  DDRB = _BV(PB6);
-  PORTB = _BV(PB6);
-  _delay_us(1);
-  DDRB = 0;
-  PORTB = 0;
-}
-
-void morse_byte(uint8_t data) {
-  for (int i=0; i<8; i++) {
-    uint8_t temp = data & 0x01;
-    if (temp) {
-      DDRB = _BV(PB6);
-      PORTB = _BV(PB6);
-      _delay_us(50);
-      DDRB = 0;
-      PORTB = 0;
-      _delay_us(10);
-    }
-    else {
-      DDRB = _BV(PB6);
-      PORTB = _BV(PB6);
-      _delay_us(10);
-      DDRB = 0;
-      PORTB = 0;
-      _delay_us(50);
-    }
-    data >>= 1;
-  }
-}
-
 void blink(uint8_t times) {
   for (int i=0; i<times; i++) {
     DDRB = _BV(PB6);
@@ -117,16 +87,4 @@ void blink(uint8_t times) {
     _delay_ms(500);
   }
   _delay_ms(500);
-}
-
-void blink_long(uint8_t times) {
-  for (int i=0; i<times; i++) {
-    DDRB = _BV(PB6);
-    PORTB = _BV(PB6);
-    _delay_ms(2000);
-    DDRB = 0;
-    PORTB = 0;
-    _delay_ms(2000);
-  }
-  _delay_ms(2000);
 }
