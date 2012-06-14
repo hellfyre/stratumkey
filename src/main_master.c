@@ -14,7 +14,6 @@ uint8_t challenge[32];
 uint8_t response[32];
 sha256_hash_t hash;
 uint8_t *secrets[32];
-uint16_t id;
 
 int main(void) {
   SETSECRET
@@ -35,9 +34,6 @@ int main(void) {
     }
     buffer = 0x00;
 
-    /*----- DEBUG: Confirm start condition -----*/
-    blink(2);
-
     /*----- Generate random challenge -----*/
     for (int i=0; i<8; i++) {
       uint32_t random_single = random();
@@ -50,29 +46,19 @@ int main(void) {
     /*----- Transmit challenge -----*/
     swu_transmit(challenge, 32);
     /*----- DEBUG: Wait one second (slave blinks debug msg) -----*/
-    _delay_ms(1000);
+    //_delay_ms(1000);
 
 
     /*----- Receive ID -----*/
-    id = 0;
-    for (int i=1; i>=0; i--) {
-      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
-      id ^= SW_UART_Receive();
-      id <<= i*8;
-    }
+    uint16_t id = 0;
+    id = swu_receive_id();
     /*----- Sanity check -----*/
     if (id > 0xffff) continue;
     if (secrets[id] == NULL) continue;
     if (id != 13) blink(5);
 
     /*----- Receive response -----*/
-    for (int i=0; i<32; i++) {
-      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
-      response[i] = SW_UART_Receive();
-    }
-
-    /*----- DEBUG: Confirm reception of response -----*/
-    blink(1);
+    swu_receive(response, 32);
 
     /*----- AND challenge and secret and hash the result -----*/
     for (int i=0; i<32; i++) {
