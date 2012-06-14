@@ -5,6 +5,7 @@
 
 #include "main_master.h"
 #include "single_wire_uart/single_wire_UART.h"
+#include "single_wire_uart/swu_highlevel.h"
 #include "avrcryptolib/sha256.h"
 
 #include "secret.h"
@@ -47,10 +48,7 @@ int main(void) {
     }
 
     /*----- Transmit challenge -----*/
-    for (int i=0; i<32; i++) {
-      SW_UART_Transmit(challenge[i]);
-      _delay_ms(2);
-    }
+    swu_transmit(challenge, 32);
     /*----- DEBUG: Wait one second (slave blinks debug msg) -----*/
     _delay_ms(1000);
 
