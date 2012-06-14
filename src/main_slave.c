@@ -7,11 +7,13 @@
 #include "single_wire_uart/single_wire_UART.h"
 #include "avrcryptolib/sha256.h"
 
+#include "secret.h"
+
 uint8_t challenge[32];
-uint8_t secret[32];
 uint8_t response[32];
 
 int main(void) {
+  SETSECRET
   uint8_t buffer;
 
   sei();
@@ -21,10 +23,6 @@ int main(void) {
   
   int i;
   for (i=0; i<32; i++) {
-    secret[i] = i%4;
-  }
-
-  for (i=0; i<32; i++) {
     while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
     challenge[i] = SW_UART_Receive();
   }
@@ -32,6 +30,7 @@ int main(void) {
   for (i=0; i<32; i++) {
     response[i] = challenge[i] ^ secret[i];
   }
+  //sha256(response, challenge, 256);
 
   blink(1);
 

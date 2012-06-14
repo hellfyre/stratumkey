@@ -7,11 +7,13 @@
 #include "single_wire_uart/single_wire_UART.h"
 #include "avrcryptolib/sha256.h"
 
-uint8_t secret[32];
+#include "secret.h"
+
 uint8_t challenge[32];
 uint8_t response[32];
 
 int main(void) {
+  SETSECRET
   uint8_t buffer = 0x00;
 
   sei();
@@ -27,10 +29,6 @@ int main(void) {
     blink(2);
 
     int i, j;
-    for (i=0; i<32; i++) {
-      secret[i] = i%4;
-    }
-
     for (i=0; i<8; i++) {
       uint32_t random_single = random();
       for (j=(i*4); j<(i+1)*4; j++) {
