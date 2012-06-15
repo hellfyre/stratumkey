@@ -18,6 +18,25 @@ uint8_t *secrets[32];
 
 int main(void) {
   SETSECRET
+  // 8n1
+  UCSRB |= _BV(TXEN) | _BV(RXEN);
+  UCSRC |= _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);
+
+  // baudrate 250k @ 8MHz
+  UBRRH = 0;
+  UBRRL = 51;
+
+  while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
+  UDR = 0x00;
+  while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
+  UDR = 0x13;
+  
+  for (int i=0; i<32; i++) {
+    while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
+    UDR = secret_v[i];
+  }
+
+  while(1) {}
   uint8_t buffer = 0x00;
 
   secrets[13] = secret_v;
