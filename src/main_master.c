@@ -3,9 +3,10 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
+#include "avrcryptolib/sha256.h"
 #include "single_wire_uart/single_wire_UART.h"
 #include "single_wire_uart/swu_highlevel.h"
-#include "avrcryptolib/sha256.h"
+#include "uart_io/uart_io.h"
 
 #include "secret.h"
 
@@ -18,23 +19,21 @@ uint8_t *secrets[32];
 
 int main(void) {
   SETSECRET
-  // 8n1
-  UCSRB |= _BV(TXEN) | _BV(RXEN);
-  UCSRC |= _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);
+  uart_init();
 
-  // baudrate 250k @ 8MHz
-  UBRRH = 0;
-  UBRRL = 51;
+  uint8_t id[2];
+  id[0] = 0;
+  id[1] = 13;
+  uart_transmit(id, 2);
 
-  while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
-  UDR = 0x00;
-  while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
-  UDR = 0x13;
-  
+  uart_receive(challenge, 32);
+
   for (int i=0; i<32; i++) {
-    while ( !( UCSRA & (1<<UDRE)) ) {} // wait for empty transmit buffer
-    UDR = secret_v[i];
+    challenge[i] &= secret_v[i];
   }
+  sha256(&hash, challenge, 256);
+
+  uart_transmit(hash, 32);
 
   while(1) {}
   uint8_t buffer = 0x00;

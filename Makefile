@@ -30,12 +30,15 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey_master.hex: stratumkey_master.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_master.elf: main_master.o sha256_master.S.o single_wire_UART_master.o swu_highlevel_master.o
+stratumkey_master.elf: main_master.o sha256_master.S.o single_wire_UART_master.o swu_highlevel_master.o uart_io.o
 	$(CC) -mmcu=$(MCU_MASTER) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_master.map
 
 sha256_master.S.o: libs/avrcryptolib/sha256-asm.S
 	$(CC) -mmcu=$(MCU_MASTER) $(ASMFLAGS) -o $@ -c $<
+
+uart_io.o: libs/uart_io/uart_io.c
+	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) -D$(MCU_MASTER) $(CFLAGS) -o $@ -c $<
 
 swu_highlevel_master.o: libs/single_wire_uart/swu_highlevel.c
 	$(CC) -mmcu=$(MCU_MASTER) -DF_CPU=$(F_CPU_MASTER) -D$(MCU_MASTER) $(CFLAGS) -o $@ -c $<
