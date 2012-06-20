@@ -7,6 +7,15 @@ import lockfile
 
 import time
 
+def init():
+  # Set up serial connection
+  port = '/dev/ttyUSB0'
+  ser = serial.Serial(port,9600,serial.EIGHTBITS,serial.PARITY_NONE,serial.STOPBITS_ONE,None,0,0,None)
+  ser.open()
+  ser.flushInput()
+
+  # Set up database
+
 def serial_loop():
 
 def main_loop():
