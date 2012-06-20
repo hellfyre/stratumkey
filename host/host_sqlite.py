@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import os
+import sys
 import sqlite3
 
 def createTable(connection):
@@ -18,6 +20,11 @@ def addKey(connection, keyid, key):
   connection.commit()
 
 def main():
+  if not os.path.exists(sys.argv[1]):
+    print 'SQLite db file not found!'
+    sys.exit(1);
+
+  conn = sqlite3.connect(sys.argv[1]);
 
 if __name__ == "__main__":
   main()
