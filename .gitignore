@@ -3,3 +3,5 @@
 *.hex
 *.o
 *.map
+*.pyc
+*.db
