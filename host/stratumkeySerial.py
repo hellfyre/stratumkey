@@ -15,18 +15,23 @@ class Serial:
     self.ser.close()
 
   def readBytes(self, count):
-    return struct.unpack('B', self.ser.read(count))[0]
+    arr = bytearray()
+    for i in range(0,count):
+      arr.append(struct.unpack('B', self.ser.read(1))[0])
+    return arr
 
   def writeBytes(self, data):
     return self.ser.write(buffer(data))
 
-  def readID():
-    d1=struct.unpack('B',readBytes(1))[0]
-    d2=struct.unpack('B',readBytes(1))[0]
+  def readID(self):
+    d1=struct.unpack('B', self.ser.read(1))[0]
+    d2=struct.unpack('B', self.ser.read(1))[0]
     return (d1<<8) + d2
 
-  def openDoor():
-    self.ser.writeBytes('\x10')
+  def openDoor(self, outputfile):
+    #self.ser.writeBytes('\x10')
+    outputfile.write('success')
+    outputfile.flush()
 
 #  def get_key(key_id):
 #    #TODO get the key form some database  
