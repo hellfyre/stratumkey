@@ -28,6 +28,12 @@ class Serial:
     d2=struct.unpack('B', self.ser.read(1))[0]
     return (d1<<8) + d2
 
+  def flushInput(self):
+    self.ser.flushInput()
+
+  def flushOutput(self):
+    self.ser.flushOutput()
+
   def openDoor(self, outputfile):
     #self.ser.writeBytes('\x10')
     outputfile.write('success')
