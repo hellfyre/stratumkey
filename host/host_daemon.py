@@ -14,15 +14,13 @@ import stratumkeySerial
 import time
 
 port = '/dev/ttyUSB0'
-dbfile = 'somedb'
+dbfile = '/var/lib/stratumkey/somedb'
 random = None
 outputfile = None
 
 class SerialThread (threading.Thread):
 
   def __init__(self, port, dbfile):
-    self.cipher = hashlib.sha256()
-
     # Set up serial connection
     # try
     self.ser = stratumkeySerial.Serial(port)
@@ -33,14 +31,16 @@ class SerialThread (threading.Thread):
     threading.Thread.__init__(self)
 
   def run(self):
+#    import pdb
+#    pdb.set_trace()
+
     self.db = stratumkeyKeydb.KeyDB(dbfile)
 
     while(True):
-#      import pdb
-#      pdb.set_trace()
       #command = ser.readBytes(1)
       command = '\x01'
       if (command == '\x01'): # Key auth
+        cipher = hashlib.sha256()
         id = self.ser.readID()
 
         challenge = random.read(32)
@@ -56,14 +56,17 @@ class SerialThread (threading.Thread):
             b = struct.unpack('B', challenge[i])[0]
             key_and_challenge.append( struct.pack('B', (a & b)) )
 
-          self.cipher.update(key_and_challenge)
-          key_hash = self.cipher.digest()
+          cipher.update(key_and_challenge)
+          key_hash = cipher.digest()
 
           if (response == key_hash):
             self.ser.openDoor(outputfile)
+            self.ser.flushInput()
 
       elif (command == '\x02'): # Door bell
         relayDoorBell()
+
+      cipher = None
 
 def init():
 
@@ -71,14 +74,11 @@ def init():
   random = open('/dev/hwrng', 'rb')
 
   global outputfile
-  outputfile = open("foobar", 'w')
+  outputfile = open("/var/lib/stratumkey/foobar", 'w')
   outputfile.write("One\n")
 
 def main_loop():
   SerialThread(port, dbfile).start()
-
-  while(True):
-    time.sleep(5)
 
 d = daemon.DaemonContext()
 d.working_directory='/var/lib/stratumkey'
