@@ -25,6 +25,8 @@ int main(void) {
 
   /*----- Send start condition -----*/
   SW_UART_Transmit(0x99);
+  /*----- Transmit ID -----*/
+  swu_transmit(id, 2);
   
   /*----- Receive challenge -----*/
   swu_receive(challenge, 32);
@@ -35,8 +37,6 @@ int main(void) {
   }
   sha256(&hash, challenge, 256);
 
-  /*----- Transmit ID -----*/
-  swu_transmit(id, 2);
   /*----- Transmit response -----*/
   swu_transmit(hash, 32);
 
