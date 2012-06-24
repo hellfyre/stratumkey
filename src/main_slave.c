@@ -6,19 +6,16 @@
 #include "single_wire_uart/single_wire_UART.h"
 #include "single_wire_uart/swu_highlevel.h"
 #include "avrcryptolib/sha256.h"
-
-#include "secret.h"
+#include "eeprom_io/eeprom_io.h"
 
 uint8_t challenge[32];
 uint8_t id[2];
-uint8_t *secret;
+uint8_t secret[32];
 sha256_hash_t hash;
 
 int main(void) {
-  SETSECRET
-  secret = secret_v;
-  id[0] = 0;
-  id[1] = 13;
+  eeprom_load_id(id);
+  eeprom_load_secret(secret);
 
   sei();
   SW_UART_Enable();
@@ -39,5 +36,4 @@ int main(void) {
 
   /*----- Transmit response -----*/
   swu_transmit(hash, 32);
-
 }
