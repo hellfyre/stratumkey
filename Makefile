@@ -30,7 +30,7 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey_master.hex: stratumkey_master.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_master.elf: main_master.o sha256_master.S.o single_wire_UART_master.o swu_highlevel_master.o uart_io.o
+stratumkey_master.elf: main_master.o sha256_master.S.o uart_io.o swu_highlevel_master.o single_wire_UART_master.o
 	$(CC) -mmcu=$(MCU_MASTER) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_master.map
 
@@ -57,7 +57,7 @@ upload_master: stratumkey_master.hex
 stratumkey_slave.hex: stratumkey_slave.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_slave.elf: main_slave.o sha256_slave.S.o single_wire_UART_slave.o swu_highlevel_slave.o
+stratumkey_slave.elf: main_slave.o sha256_slave.S.o swu_highlevel_slave.o single_wire_UART_slave.o eeprom_io.o
 	$(CC) -mmcu=$(MCU_SLAVE) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_slave.map
 
@@ -68,6 +68,9 @@ swu_highlevel_slave.o: libs/single_wire_uart/swu_highlevel.c
 	$(CC) -mmcu=$(MCU_SLAVE) -DF_CPU=$(F_CPU_SLAVE) -D$(MCU_SLAVE) $(CFLAGS) -o $@ -c $<
   
 single_wire_UART_slave.o: libs/single_wire_uart/single_wire_UART.c
+	$(CC) -mmcu=$(MCU_SLAVE) -DF_CPU=$(F_CPU_SLAVE) -D$(MCU_SLAVE) $(CFLAGS) -o $@ -c $<
+
+eeprom_io.o: libs/eeprom_io/eeprom_io.c
 	$(CC) -mmcu=$(MCU_SLAVE) -DF_CPU=$(F_CPU_SLAVE) -D$(MCU_SLAVE) $(CFLAGS) -o $@ -c $<
 
 main_slave.o: src/main_slave.c
