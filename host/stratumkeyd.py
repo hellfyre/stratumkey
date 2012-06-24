@@ -13,8 +13,6 @@ import stratumkeySerial
 
 import time
 
-port = '/dev/ttyUSB0'
-dbfile = '/var/lib/stratumkey/somedb'
 random = None
 outputfile = None
 
@@ -64,24 +62,50 @@ class SerialThread (threading.Thread):
 
       cipher = None
 
+"""
+class ControlThread (threading.Thread):
+
+  def __init__(self, socket):
+"""
+
 def init():
 
   global random
-  random = open('/dev/hwrng', 'rb')
+  if os.path.exists('/dev/hwrng'):
+    random = open('/dev/hwrng', 'rb')
+  else:
+    random = open('/dev/random', 'rb')
 
   global outputfile
   outputfile = open("/var/lib/stratumkey/foobar", 'w')
   outputfile.write("One\n")
 
 def main_loop():
-  SerialThread(port, dbfile).start()
+  SerialThread(args.port, args.db_file).start()
 
-d = daemon.DaemonContext()
-d.working_directory='/var/lib/stratumkey'
-d.pidfile=lockfile.FileLock('/var/run/stratumkey.pid')
+def main():
+  optparser = argparse.ArgumentParser(description="StratumKey daemon is responsible for auth'ing keys used to open the Space Gate")
+  optparser.add_argument('--no-daemon', '-n', action='store_const', const='1', help="Don't go into daemon mode")
+  optparser.add_argument('--db-file', '-d', help="The file containing the key database. Format is sqlite3", default='keydb')
+  optparser.add_argument('--port', '-p', help="Serial interface to the StratumKey master", default='/dev/ttyUSB0')
+  optparser.add_argument('--socket', '-s', help="The socket for stratumkey_ctl", default='sock_ctl')
 
-d.files_preserve=[outputfile]
+  global args
+  args = optparser.parse_args()
 
-with d:
-  init()
-  main_loop()
+  if not args.no_daemon:
+    d = daemon.DaemonContext()
+    d.working_directory='/var/lib/stratumkey'
+    d.pidfile=lockfile.FileLock('/var/run/stratumkey.pid')
+
+    d.files_preserve=[outputfile]
+
+    with d:
+      init()
+      main_loop()
+  else:
+    init()
+    main_loop()
+
+if __name__ == "__main__":
+  main()
