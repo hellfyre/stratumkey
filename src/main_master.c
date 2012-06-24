@@ -11,7 +11,6 @@ void blink(uint8_t times);
 
 int main(void) {
   uart_init();
-  uint8_t buffer = 0x00;
 
   sei();
   SW_UART_Enable();
@@ -22,13 +21,15 @@ int main(void) {
     uint8_t challenge[32];
     uint8_t response[32];
     uint8_t id[2];
+    uint8_t buffer = 0x00;
 
     /*----- Wait for start condition -----*/
     while(buffer != 0x99) {
       while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
       buffer = SW_UART_Receive();
     }
-    buffer = 0x00;
+    buffer = 0x01;
+    uart_transmit(&buffer, 1);
 
     /*----- Receive ID -----*/
     swu_receive(id, 2); // from key
