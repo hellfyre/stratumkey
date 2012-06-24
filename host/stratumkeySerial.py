@@ -23,6 +23,10 @@ class Serial:
   def writeBytes(self, data):
     return self.ser.write(buffer(data))
 
+  def readCommand(self):
+    cmd = struct.unpack('B', self.ser.read(1))[0]
+    return cmd
+
   def readID(self):
     d1=struct.unpack('B', self.ser.read(1))[0]
     d2=struct.unpack('B', self.ser.read(1))[0]

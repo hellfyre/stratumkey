@@ -31,15 +31,11 @@ class SerialThread (threading.Thread):
     threading.Thread.__init__(self)
 
   def run(self):
-#    import pdb
-#    pdb.set_trace()
-
     self.db = stratumkeyKeydb.KeyDB(dbfile)
 
     while(True):
-      #command = ser.readBytes(1)
-      command = '\x01'
-      if (command == '\x01'): # Key auth
+      command = self.ser.readCommand()
+      if (command == 0x01): # Key auth
         cipher = hashlib.sha256()
         id = self.ser.readID()
 
@@ -63,7 +59,7 @@ class SerialThread (threading.Thread):
             self.ser.openDoor(outputfile)
             self.ser.flushInput()
 
-      elif (command == '\x02'): # Door bell
+      elif (command == 0x02): # Door bell
         relayDoorBell()
 
       cipher = None
