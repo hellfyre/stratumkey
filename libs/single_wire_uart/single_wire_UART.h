@@ -49,7 +49,7 @@
 #define WAIT_ONEHALF          (WAIT_ONE + WAIT_ONE/2)
 
 #if (PRESCALER == 1)
-  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_1))  //Needs to be change if a different timer is used. Please refer to datasheet.
+  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_1))
   #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<TIMER_PRESCALER_1))
 #elif (PRESCALER == 8)
   #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_8))
