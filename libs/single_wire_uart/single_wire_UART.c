@@ -201,7 +201,7 @@ SIGNAL(SIG_INTERRUPT0)
  *          so an interrupt is not missed.
  */
 #pragma vector=SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR
-SIGNAL(SIG_OUTPUT_COMPARE2)
+SIGNAL(SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR)
 {
   SET_UART_TIMER_COMPARE_WAIT_ONE(); //Set timer compare value to trigger the ISR once every bit period.
 
