@@ -1,8 +1,8 @@
 ## target mcu; avr-gcc and avrdude usually have different mcu-names
 # attiny13, attiny85, atmega8
-MCU_SLAVE	= atmega8
+MCU_SLAVE	= attiny85
 # t13, t85, m8
-DUDEMCU_SLAVE	= m8
+DUDEMCU_SLAVE	= t85
 F_CPU_SLAVE = 8000000UL
 MCU_MASTER	= atmega8
 DUDEMCU_MASTER	= m8
