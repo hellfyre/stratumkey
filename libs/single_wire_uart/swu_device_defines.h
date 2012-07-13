@@ -57,23 +57,23 @@
 #define SW_UART_DDR           DDRB    //!< Data direction register. Not available for high voltage ports.
 
 /* Timer prescaler device defines */
-#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR1 //!< Define the timer control register according to the timer used for the UART.
-#define TIMER_PRESCALER_1                   CS10
-#define TIMER_PRESCALER_8                   CS12
+#define TIMER_PRESCALER_CONTROL_REGISTER    TCCR0B //!< Define the timer control register according to the timer used for the UART.
+#define TIMER_PRESCALER_1                   CS00
+#define TIMER_PRESCALER_8                   CS01
 
 /* UART interrupt vectors definitions. */
 #define SW_UART_EXTERNAL_INTERRUPT_VECTOR       INT0_vect             //!< UART external interrupt vector. Make sure this is in accordance to the defined UART pin.
-#define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER1_COMPA_vect      //!< UART compare interrupt vector.
+#define SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR  TIMER0_COMPA_vect      //!< UART compare interrupt vector.
 
 /* Timer device defines */
 #define TIMER_INT_MASK    TIMSK
 #define TIMER_INT_FLAG    TIFR
-#define TIMER_CONTROL     TCCR1
-#define WAVEFORM_BIT      CTC1
-#define TIMER_COUNT       TCNT1
-#define OUTPUT_COMPARE    OCR1A
-#define OUTPUT_COMP_INT   OCIE1A
-#define OUTPUT_COMP_FLAG  OCF1A
+#define TIMER_CONTROL     TCCR0A
+#define WAVEFORM_BIT      WGM01
+#define TIMER_COUNT       TCNT0
+#define OUTPUT_COMPARE    OCR0A
+#define OUTPUT_COMP_INT   OCIE0A
+#define OUTPUT_COMP_FLAG  OCF0A
 
 /* Interrupt device defines */
 #define MCU_CONTROL       MCUCR
