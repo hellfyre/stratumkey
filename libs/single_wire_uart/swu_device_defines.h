@@ -51,7 +51,7 @@
 #define PRESCALER             8       //!< Prescaler setting. Must be set according to the baud rate setting.
 
 /* Port and pin settings. */
-#define SW_UART_PIN_NUMBER    PB3     //!< Set pin number for communication.
+#define SW_UART_PIN_NUMBER    PB2     //!< Set pin number for communication.
 #define SW_UART_PORT          PORTB   //!< Set port for communication.
 #define SW_UART_PIN           PINB    //!< Set pin for communication.
 #define SW_UART_DDR           DDRB    //!< Data direction register. Not available for high voltage ports.
