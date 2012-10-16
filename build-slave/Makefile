@@ -2,7 +2,7 @@
 # attiny13, attiny85, atmega8
 MCU	= attiny85
 # t13, t85, m8
-DUDEDUDEMCU	= t85
+DUDEMCU	= t85
 F_CPU = 8000000UL
 
 ## avrdude options
