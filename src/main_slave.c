@@ -24,9 +24,15 @@ int main(void) {
   SW_UART_Transmit(0x99);
   /*----- Transmit ID -----*/
   swu_transmit(id, 2);
+
+  WDTCR |= _BV(WDP0);
+  WDTCR |= _BV(WDE);
   
   /*----- Receive challenge -----*/
   swu_receive(challenge, 32);
+
+  WDTCR |= _BV(WDCE) | _BV(WDE);
+  WDTCR = 0x00;
 
   /*----- AND challenge and secret and hash the result -----*/
   for (int i=0; i<32; i++) {

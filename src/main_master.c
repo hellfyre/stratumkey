@@ -7,6 +7,9 @@
 #include "single_wire_uart/swu_highlevel.h"
 #include "uart_io/uart_io.h"
 
+void wd_en();
+void wd_dis();
+
 void blink(uint8_t times);
 
 int main(void) {
@@ -31,18 +34,36 @@ int main(void) {
     buffer = 0x01;
     uart_transmit(&buffer, 1);
 
+    wd_en();
+
     /*----- Receive ID -----*/
     swu_receive(id, 2); // from key
     uart_transmit(id, 2); // to host
+
+    wd_dis();
 
     /*----- Transmit challenge -----*/
     uart_receive(challenge, 32); // from host
     swu_transmit(challenge, 32); // to key
 
+    wd_en();
+
     /*----- Receive response -----*/
     swu_receive(response, 32);
     uart_transmit(response, 32);
+
+    wd_dis();
   }
+}
+
+void wd_en() {
+  WDTCR |= _BV(WDP0);
+  WDTCR |= _BV(WDE);
+}
+
+void wd_dis(){
+  WDTCR |= _BV(WDCE) | _BV(WDE);
+  WDTRC = 0x00;
 }
 
 void blink(uint8_t times) {
