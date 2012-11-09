@@ -1,0 +1,24 @@
+msc {
+  a [label="Slave\n(Key)"], b [label="Master\n"], c [label="SpaceGate\n(PC)"];
+  |||;
+  --- [label="Key plugged in"];
+  a->b [label="Start condition\n0x99"];
+  b->c [label="Cmd \"key_auth\"\n0x01"];
+
+  b rbox b [label="Enable WD"];
+  a->b [label="KeyID"];
+  b->c [label="KeyID"];
+  b rbox b [label="Disable WD"];
+
+  c box c [label="Generate challenge"];
+
+  b<-c [label="Challenge"];
+  a<-b [label="Challenge"];
+
+  b rbox b [label="Enable WD"];
+  a box a [label="Calculate response"];
+
+  a->b [label="Response"];
+  b->c [label="Response"];
+  b rbox b [label="Disable WD"];
+}
