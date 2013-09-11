@@ -43,6 +43,8 @@
 //    38400       NA         NA     103 - 1   207 - 1
 // Please note that the UART consumes about all CPU resources when WAIT_ONE*PRESCALER<100.
 
+#define CB_RECV_BUFFER_SIZE 64
+
 #define TRANSMIT_DELAY        70    //!< Cycles from the start bit is sent (from UART_transmit) to the timer is started plus cycles in the timer interrupt before first data bit is sent.
 #define RECEIVE_DELAY         76    //!< Cycles from the start bit is detected to the timer is started plus cycles in timer interrupt before first data bit is received.
 
@@ -124,6 +126,15 @@ extern volatile uint8_t SW_UART_status;         //!< Byte holding status flags.
 //when the GPIO register is used.
 //__io __no_init static volatile uint8_t SW_UART_status @ 0x1E;
 
+// Single wire UART data received callback
+typedef void (*swu_datarecv_cb_t)(uint8_t *data);
+extern swu_datarecv_cb_t swu_datarecv_callback; // one callback is plenty
+extern uint8_t receive_buffer[CB_RECV_BUFFER_SIZE];
+extern uint8_t receive_buffer_ctr;
+
+void swu_datarecv_accumulate(uint8_t data);
+void swu_datarecv_cb_register(swu_datarecv_cb_t cb);
+void swu_datarecv_cb_dispatch(uint8_t *data);
 
 /* Global UART functions. */
 void    SW_UART_Enable(void);       //!< Enable the UART.

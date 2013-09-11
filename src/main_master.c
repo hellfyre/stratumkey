@@ -12,11 +12,16 @@ void wd_dis();
 
 void blink(uint8_t times);
 
+void receive_callback(uint8_t *data) {
+}
+
 int main(void) {
   uart_init();
 
   sei();
   SW_UART_Enable();
+
+  swu_datarecv_cb_register(receive_callback);
 
   /*----- Outer loop -----*/
   while(1) {

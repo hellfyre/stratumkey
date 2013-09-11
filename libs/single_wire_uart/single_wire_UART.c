@@ -61,6 +61,36 @@ static volatile uint8_t   UART_Rx_data;     //!< Byte holding data being receive
 static volatile uint8_t   UART_Tx_buffer;   //!< Transmission buffer.
 static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
 
+/* Callback functions */
+extern swu_datarecv_cb_t swu_datarecv_callback = 0;
+extern uint8_t receive_buffer[CB_RECV_BUFFER_SIZE];
+extern uint8_t receive_buffer_ctr = 0;
+
+void swu_datarecv_accumulate(uint8_t data)
+{
+  if (data == '\n' || receive_buffer_ctr == CB_RECV_BUFFER_SIZE) {
+    swu_datarecv_cb_dispatch(receive_buffer);
+    for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
+      receive_buffer[i] = 0;
+    }
+    receive_buffer_ctr = 0;
+  }
+  else {
+    receive_buffer[receive_buffer_ctr++] = data;
+  }
+  // maybe reset signal handler
+}
+
+// Register callback. Overwrite previously registered callback.
+void swu_datarecv_cb_register(swu_datarecv_cb_t cb)
+{
+  swu_datarecv_callback = cb;
+}
+
+void swu_datarecv_cb_dispatch(uint8_t *data)
+{
+  swu_datarecv_callback(data);
+}
 
 /*! \brief  Enable the UART.
  *
@@ -76,6 +106,10 @@ static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
  */
 void SW_UART_Enable(void)
 {
+  for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
+    receive_buffer[i] = 0;
+  }
+
   //Tri-state communication pin.
   INITIALIZE_UART_PIN();
 
@@ -247,6 +281,7 @@ SIGNAL(SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR)
       SET_FLAG( SW_UART_status, SW_UART_RX_BUFFER_FULL );
       CLEAR_UART_EXTERNAL_INTERRUPT_FLAG();
       ENABLE_UART_EXTERNAL_INTERRUPT();   //Get ready to receive new byte.
+      swu_datarecv_accumulate(SW_UART_Receive());
     }
 
     //If reception finished and no new incoming data has been detected.
