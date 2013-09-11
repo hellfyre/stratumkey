@@ -63,20 +63,20 @@ static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
 
 /* Callback functions */
 extern swu_datarecv_cb_t swu_datarecv_callback = 0;
-extern uint8_t receive_buffer[CB_RECV_BUFFER_SIZE];
-extern uint8_t receive_buffer_ctr = 0;
+extern uint8_t swu_receive_buffer[CB_RECV_BUFFER_SIZE];
+extern uint8_t swu_receive_buffer_ctr = 0;
 
 void swu_datarecv_accumulate(uint8_t data)
 {
-  if (data == '\n' || receive_buffer_ctr == CB_RECV_BUFFER_SIZE) {
-    swu_datarecv_cb_dispatch(receive_buffer);
+  if (data == '\n' || swu_receive_buffer_ctr == CB_RECV_BUFFER_SIZE) {
+    swu_datarecv_cb_dispatch(swu_receive_buffer);
     for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
-      receive_buffer[i] = 0;
+      swu_receive_buffer[i] = 0;
     }
-    receive_buffer_ctr = 0;
+    swu_receive_buffer_ctr = 0;
   }
   else {
-    receive_buffer[receive_buffer_ctr++] = data;
+    swu_receive_buffer[swu_receive_buffer_ctr++] = data;
   }
   // maybe reset signal handler
 }
@@ -107,7 +107,7 @@ void swu_datarecv_cb_dispatch(uint8_t *data)
 void SW_UART_Enable(void)
 {
   for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
-    receive_buffer[i] = 0;
+    swu_receive_buffer[i] = 0;
   }
 
   //Tri-state communication pin.

@@ -129,8 +129,8 @@ extern volatile uint8_t SW_UART_status;         //!< Byte holding status flags.
 // Single wire UART data received callback
 typedef void (*swu_datarecv_cb_t)(uint8_t *data);
 extern swu_datarecv_cb_t swu_datarecv_callback; // one callback is plenty
-extern uint8_t receive_buffer[CB_RECV_BUFFER_SIZE];
-extern uint8_t receive_buffer_ctr;
+extern uint8_t swu_receive_buffer[CB_RECV_BUFFER_SIZE];
+extern uint8_t swu_receive_buffer_ctr;
 
 void swu_datarecv_accumulate(uint8_t data);
 void swu_datarecv_cb_register(swu_datarecv_cb_t cb);
