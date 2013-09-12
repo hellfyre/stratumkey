@@ -89,7 +89,8 @@ void swu_datarecv_cb_register(swu_datarecv_cb_t cb)
 
 void swu_datarecv_cb_dispatch(uint8_t *data)
 {
-  swu_datarecv_callback(data);
+  if (swu_datarecv_callback != 0)
+    swu_datarecv_callback(data);
 }
 
 /*! \brief  Enable the UART.
