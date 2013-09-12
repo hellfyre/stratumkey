@@ -6,13 +6,8 @@ uint8_t EEPROM_read(uint8_t *addr) {
   return eeprom_read_byte(addr);
 }
 
-void eeprom_load_id(uint8_t *id) {
-  id[0] = EEPROM_read((uint8_t*)0);
-  id[1] = EEPROM_read((uint8_t*)1);
-}
-
-void eeprom_load_secret(uint8_t *secret) {
-  for (int i=0; i<32; i++) {
-    secret[i] = EEPROM_read((uint8_t*)i+2);
+void eeprom_load(uint8_t *data, uint8_t start, uint8_t len) {
+  for (int i=start; i<len+start; i++) {
+    data[i] = EEPROM_read((uint8_t*)i);
   }
 }
