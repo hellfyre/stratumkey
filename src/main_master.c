@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "single_wire_uart/single_wire_UART.h"
 #include "single_wire_uart/swu_highlevel.h"
@@ -12,57 +13,30 @@ void wd_dis();
 
 void blink(uint8_t times);
 
-void swu_receive_callback(uint8_t *data) {
+void swu_receive_callback(uint8_t *data, uint8_t len) {
+  if(data[0]<0xb0) {
+    uart_transmit(data, len);
+  }
 }
 
-void uart_receive_callback(uint8_t *data) {
+void uart_receive_callback(uint8_t *data, uint8_t len) {
+  if(data[0]<0xb0) {
+    swu_transmit(data, len);
+  }
 }
 
 int main(void) {
-  uart_init();
 
   sei();
+  uart_init();
   SW_UART_Enable();
 
   swu_datarecv_cb_register(swu_receive_callback);
   uart_datarecv_cb_register(uart_receive_callback);
 
-  /*----- Outer loop -----*/
-  while(1) {
+  wd_en();
 
-    uint8_t challenge[32];
-    uint8_t response[32];
-    uint8_t id[2];
-    uint8_t buffer = 0x00;
-
-    /*----- Wait for start condition -----*/
-    while(buffer != 0x99) {
-      while(!READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL)) {}
-      buffer = SW_UART_Receive();
-    }
-    buffer = 0x01;
-    uart_transmit(&buffer, 1);
-
-    wd_en();
-
-    /*----- Receive ID -----*/
-    swu_receive(id, 2); // from key
-    uart_transmit(id, 2); // to host
-
-    wd_dis();
-
-    /*----- Transmit challenge -----*/
-    uart_receive(challenge, 32); // from host
-    swu_transmit(challenge, 32); // to key
-
-    wd_en();
-
-    /*----- Receive response -----*/
-    swu_receive(response, 32);
-    uart_transmit(response, 32);
-
-    wd_dis();
-  }
+  while(1) {}
 }
 
 void wd_en() {
