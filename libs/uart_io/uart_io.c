@@ -1,19 +1,19 @@
 #include <avr/io.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <stdint.h>
+#include "uart_io.h"
 
 /* Callback functions */
-extern uart_datarecv_cb_t uart_datarecv_callback = 0;
-extern uint8_t uart_receive_buffer[CB_RECV_BUFFER_SIZE];
-extern uint8_t uart_receive_buffer_ctr = 0;
+uart_datarecv_cb_t uart_datarecv_callback = 0;
+uint8_t uart_receive_buffer[UART_CB_RECV_BUFFER_SIZE];
+uint8_t uart_receive_buffer_ctr = 0;
 
 void uart_datarecv_accumulate(uint8_t data)
 {
-  if (data == '\n' || uart_receive_buffer_ctr == CB_RECV_BUFFER_SIZE) {
+  if (data == '\n' || uart_receive_buffer_ctr == UART_CB_RECV_BUFFER_SIZE) {
     uart_datarecv_cb_dispatch(uart_receive_buffer);
-    for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
-      uart_receive_buffer[i] = 0;
-    }
+    memset(uart_receive_buffer, 0, UART_CB_RECV_BUFFER_SIZE);
     uart_receive_buffer_ctr = 0;
   }
   else {
@@ -27,9 +27,14 @@ void uart_datarecv_cb_register(uart_datarecv_cb_t cb)
   uart_datarecv_callback = cb;
 }
 
-void uart_datarecv_cb_dispatch(uint8_t *data)
+void uart_datarecv_cb_dispatch()
 {
-  uart_datarecv_callback(data);
+  if (uart_datarecv_callback != 0) {
+    uint8_t *data = malloc(uart_receive_buffer_ctr);
+    memcpy(data, uart_receive_buffer, uart_receive_buffer_ctr);
+    uart_datarecv_callback(data, uart_receive_buffer_ctr);
+    free(data);
+  }
 }
 
 SIGNAL(SIG_UART_RECV) {
@@ -37,6 +42,8 @@ SIGNAL(SIG_UART_RECV) {
 }
 
 void uart_init() {
+  memset(uart_receive_buffer, 0, UART_CB_RECV_BUFFER_SIZE);
+
   // 8n1
   UCSRB |= _BV(TXEN) | _BV(RXEN);
   UCSRC |= _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);

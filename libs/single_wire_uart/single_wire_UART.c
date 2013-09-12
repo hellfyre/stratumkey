@@ -35,6 +35,8 @@
 #include <avr/interrupt.h>              //The __enable_interrupt() intrinsic.
 #include "stdint.h"             //Integer types.
 #include "single_wire_UART.h"   //UART settings and device spesific.
+#include "stdlib.h"             //malloc()
+#include "string.h"             //memcpy()
 
 /* Counter values */
 #define UART_STATE_IDLE       0
@@ -62,17 +64,15 @@ static volatile uint8_t   UART_Tx_buffer;   //!< Transmission buffer.
 static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
 
 /* Callback functions */
-extern swu_datarecv_cb_t swu_datarecv_callback = 0;
-extern uint8_t swu_receive_buffer[CB_RECV_BUFFER_SIZE];
-extern uint8_t swu_receive_buffer_ctr = 0;
+swu_datarecv_cb_t swu_datarecv_callback = 0;
+uint8_t swu_receive_buffer[SWU_CB_RECV_BUFFER_SIZE];
+uint8_t swu_receive_buffer_ctr = 0;
 
 void swu_datarecv_accumulate(uint8_t data)
 {
-  if (data == '\n' || swu_receive_buffer_ctr == CB_RECV_BUFFER_SIZE) {
-    swu_datarecv_cb_dispatch(swu_receive_buffer);
-    for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
-      swu_receive_buffer[i] = 0;
-    }
+  if (data == '\n' || swu_receive_buffer_ctr == SWU_CB_RECV_BUFFER_SIZE) {
+    swu_datarecv_cb_dispatch();
+    memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
     swu_receive_buffer_ctr = 0;
   }
   else {
@@ -87,10 +87,14 @@ void swu_datarecv_cb_register(swu_datarecv_cb_t cb)
   swu_datarecv_callback = cb;
 }
 
-void swu_datarecv_cb_dispatch(uint8_t *data)
+void swu_datarecv_cb_dispatch()
 {
-  if (swu_datarecv_callback != 0)
-    swu_datarecv_callback(data);
+  if (swu_datarecv_callback != 0) {
+    uint8_t *data = malloc(swu_receive_buffer_ctr);
+    memcpy(data, swu_receive_buffer, swu_receive_buffer_ctr);
+    swu_datarecv_callback(data, swu_receive_buffer_ctr);
+    free(data);
+  }
 }
 
 /*! \brief  Enable the UART.
@@ -107,9 +111,7 @@ void swu_datarecv_cb_dispatch(uint8_t *data)
  */
 void SW_UART_Enable(void)
 {
-  for (int i=0; i<CB_RECV_BUFFER_SIZE; i++) {
-    swu_receive_buffer[i] = 0;
-  }
+  memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
 
   //Tri-state communication pin.
   INITIALIZE_UART_PIN();
