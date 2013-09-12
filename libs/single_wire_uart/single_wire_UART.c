@@ -70,15 +70,18 @@ uint8_t swu_receive_buffer_ctr = 0;
 
 void swu_datarecv_accumulate(uint8_t data)
 {
-  if (data == '\n' || swu_receive_buffer_ctr == SWU_CB_RECV_BUFFER_SIZE) {
+  if (swu_receive_buffer_ctr == SWU_CB_RECV_BUFFER_SIZE) {
+    // there is no message as long as the buffer, something went wrong
+    memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
+    swu_receive_buffer_ctr = 0;
+  }
+
+  swu_receive_buffer[swu_receive_buffer_ctr++] = data;
+  if (data == '\n') { // end of message indicated by '\n'
     swu_datarecv_cb_dispatch();
     memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
     swu_receive_buffer_ctr = 0;
   }
-  else {
-    swu_receive_buffer[swu_receive_buffer_ctr++] = data;
-  }
-  // maybe reset signal handler
 }
 
 // Register callback. Overwrite previously registered callback.

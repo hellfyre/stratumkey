@@ -11,13 +11,17 @@ uint8_t uart_receive_buffer_ctr = 0;
 
 void uart_datarecv_accumulate(uint8_t data)
 {
-  if (data == '\n' || uart_receive_buffer_ctr == UART_CB_RECV_BUFFER_SIZE) {
-    uart_datarecv_cb_dispatch(uart_receive_buffer);
+  if (uart_receive_buffer_ctr == UART_CB_RECV_BUFFER_SIZE) {
+    // there is no message as long as the buffer, something went wrong
     memset(uart_receive_buffer, 0, UART_CB_RECV_BUFFER_SIZE);
     uart_receive_buffer_ctr = 0;
   }
-  else {
-    uart_receive_buffer[uart_receive_buffer_ctr++] = data;
+
+  uart_receive_buffer[uart_receive_buffer_ctr++] = data;
+  if (data == '\n') { // end of message indicated by '\n'
+    uart_datarecv_cb_dispatch();
+    memset(uart_receive_buffer, 0, UART_CB_RECV_BUFFER_SIZE);
+    uart_receive_buffer_ctr = 0;
   }
 }
 
