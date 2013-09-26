@@ -46,7 +46,7 @@ void wd_en() {
 
 void wd_dis(){
   WDTCR |= _BV(WDCE) | _BV(WDE);
-  WDTRC = 0x00;
+  WDTCR = 0x00;
 }
 
 void blink(uint8_t times) {
