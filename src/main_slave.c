@@ -1,7 +1,5 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "single_wire_uart/single_wire_UART.h"
