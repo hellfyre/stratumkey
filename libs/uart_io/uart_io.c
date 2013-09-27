@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,7 +42,7 @@ void uart_datarecv_cb_dispatch()
   }
 }
 
-SIGNAL(SIG_UART_RECV) {
+ISR(USART_RXC_vect) {
   uart_datarecv_accumulate(UDR);
 }
 

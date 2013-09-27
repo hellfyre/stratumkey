@@ -211,7 +211,7 @@ uint8_t SW_UART_Receive(void)
  *  the first data bit to be received.
  */
 #pragma vector=SW_UART_EXTERNAL_INTERRUPT_VECTOR
-SIGNAL(SIG_INTERRUPT0)
+ISR(INT0_vect)
 {
   //Make sure bit is low.
   if(!READ_UART_PIN())
