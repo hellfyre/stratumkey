@@ -18,7 +18,7 @@ SRCDIR=../src
 LIBDIR=../libs
 
 CFLAGS=-Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR)
-ASMFLAGS=-Wall -I$(SRCDIR) -I$(LIBDIR) -assembler-with-cpp
+ASMFLAGS=-Wall -I$(SRCDIR) -I$(LIBDIR)
 LDFLAGS=-Wl,-Map=Map.map -Wl,-gc-sections
 DEBUGFLAGS=-g -gdwarf-2
 
