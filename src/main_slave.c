@@ -60,5 +60,5 @@ int main(void) {
   response[0] = 0xa3;
   memcpy(response+1, hash, 32);
   response[33] = '\n';
-  swu_transmit(reponse, 34);
+  swu_transmit(response, 34);
 }
