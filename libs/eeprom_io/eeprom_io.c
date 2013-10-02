@@ -7,7 +7,7 @@ uint8_t EEPROM_read(uint8_t *addr) {
 }
 
 void eeprom_load(uint8_t *data, uint8_t start, uint8_t len) {
-  for (int i=start; i<len+start; i++) {
-    data[i] = EEPROM_read((uint8_t*)i);
+  for (int i=0; i<len; i++) {
+    data[i] = EEPROM_read((uint8_t*)(i+start));
   }
 }
