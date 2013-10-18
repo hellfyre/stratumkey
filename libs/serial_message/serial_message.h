@@ -9,11 +9,11 @@ typedef struct {
   uint8_t msg_type;
   uint8_t len;
   uint8_t *payload;
-} serial_message;
+} serial_message_t;
 
-uint8_t sm_message_length(serial_message *msg);
-uint8_t sm_payload_length(serial_message *msg);
-void sm_serialize(serial_message *msg, uint8_t *data);
-void sm_deserialize(serial_message *msg, uint8_t *data);
+uint8_t sm_message_length(serial_message_t *msg);
+uint8_t sm_payload_length(serial_message_t *msg);
+void sm_serialize(serial_message_t *msg, uint8_t *data);
+void sm_deserialize(serial_message_t *msg, uint8_t *data);
 
 #endif /* __SERIAL_MESSAGE__ */
