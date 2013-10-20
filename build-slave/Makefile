@@ -27,7 +27,7 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey_slave.hex: stratumkey_slave.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_slave.elf: main_slave.o sha256.S.o swu_highlevel.o single_wire_UART.o eeprom_io.o
+stratumkey_slave.elf: main_slave.o sha256.S.o swu_highlevel.o single_wire_UART.o eeprom_io.o serial_message.o
 	$(CC) -mmcu=$(MCU) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_slave.map
 
@@ -41,6 +41,9 @@ single_wire_UART.o: $(LIBDIR)/single_wire_uart/single_wire_UART.c
 	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
 
 eeprom_io.o: $(LIBDIR)/eeprom_io/eeprom_io.c
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+
+serial_message.o: $(LIBDIR)/serial_message/serial_message.c
 	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
 
 main_slave.o: $(SRCDIR)/main_slave.c

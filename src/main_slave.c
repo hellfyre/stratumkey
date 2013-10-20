@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <string.h>
 
+#include "single_wire_uart/single_wire_UART.h"
 #include "avrcryptolib/sha256.h"
 #include "eeprom_io/eeprom_io.h"
 #include "serial_message/serial_message.h"

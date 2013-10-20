@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "single_wire_uart/swu_highlevel.h"
+#ifdef STRATUMKEY_UART
+  #include "uart_io/uart_io.h"
+#endif
+
 #include "serial_message.h"
 
 serial_message_t* sm_serial_message_new() {
@@ -51,13 +56,15 @@ void sm_deserialize(serial_message_t *msg, uint8_t *data) {
   msg->payload = payload;
 }
 
-void sm_transmit_msg(sm_line_t line, serial_message *msg) {
-  if (line == UART) {
-    uart_transmit(sm_serialize(msg), sm_message_length(msg));
-  }
-  else if (line == SWU) {
+void sm_transmit_msg(sm_line_t line, serial_message_t *msg) {
+  if (line == SWU) {
     swu_transmit(sm_serialize(msg), sm_message_length(msg));
   }
+#ifdef STRATUMKEY_UART
+  else if (line == UART) {
+    uart_transmit(sm_serialize(msg), sm_message_length(msg));
+  }
+#endif
 }
 
 serial_message_t* sm_receive_msg(sm_line_t line) {
