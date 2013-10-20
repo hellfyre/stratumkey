@@ -2,13 +2,19 @@
 #include <avr/interrupt.h>
 #include <string.h>
 
-#include "single_wire_uart/swu_highlevel.h"
 #include "avrcryptolib/sha256.h"
 #include "eeprom_io/eeprom_io.h"
+#include "serial_message/serial_message.h"
+
+#ifndef FALSE
+  #define FALSE 0
+  #define TRUE !FALSE
+#endif
 
 uint8_t key1[32];
 uint8_t key2[32];
 uint8_t uuid[16];
+uint8_t success = FALSE;
 sha256_hash_t hash;
 
 int main(void) {
@@ -19,45 +25,35 @@ int main(void) {
   sei();
   SW_UART_Enable();
 
-  /*----- Transmit ID + key2 -----*/
-  uint8_t first_msg[50];
+  while(!success) {
+    /*----- Transmit ID + key2 -----*/
+    serial_message_t *msg = sm_serial_message_new();
 
-  first_msg[0] = 0xa1;
-  memcpy(first_msg+1, uuid, 16);
-  memcpy(first_msg+17, key2, 32);
-  first_msg[49] = '\n';
+    msg->msg_type = 0xa1;
+    sm_append_payload(msg, uuid, sizeof(uuid));
+    sm_append_payload(msg, key2, sizeof(key2));
 
-  swu_transmit(first_msg, 50);
+    sm_transmit_msg(SWU, msg);
+    sm_serial_message_free(msg);
 
-  // Enable watchdog
-  WDTCR |= _BV(WDP0);
-  WDTCR |= _BV(WDE);
-  
-  /*----- Receive challenge -----*/
-  uint8_t second_msg[34];
-  uint8_t challenge[32];
+    /*----- Receive challenge -----*/
+    msg = sm_receive_msg(SWU);
 
-  swu_receive(second_msg, 34);
-  if (second_msg[0] == 0xa2) {
-    memcpy(challenge, second_msg+1, 32);
+    if (msg->msg_type != 0xa2) continue;
+
+    /*----- Concatenate challenge and key1 and hash the result -----*/
+    uint8_t chall_key1[64];
+
+    memcpy(chall_key1, msg->payload, 32);
+    memcpy(chall_key1+32, key1, 32);
+    sha256(&hash, chall_key1, 512);
+
+    /*----- Transmit response -----*/
+    sm_delete_payload(msg);
+    
+    msg->msg_type = 0xa3;
+    sm_append_payload(msg, hash, sizeof(hash));
+    sm_transmit_msg(SWU, msg);
+    success = TRUE;
   }
-
-  // Disable watchdog
-  WDTCR |= _BV(WDCE) | _BV(WDE);
-  WDTCR = 0x00;
-
-  /*----- Concatenate challenge and key1 and hash the result -----*/
-  uint8_t chall_key1[64];
-
-  memcpy(chall_key1, challenge, 32);
-  memcpy(chall_key1+32, key1, 32);
-  sha256(&hash, chall_key1, 512);
-
-  /*----- Transmit response -----*/
-  uint8_t response[34];
-  
-  response[0] = 0xa3;
-  memcpy(response+1, hash, 32);
-  response[33] = '\n';
-  swu_transmit(response, 34);
 }
