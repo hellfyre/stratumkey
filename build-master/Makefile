@@ -17,7 +17,7 @@ OBJDUMP = avr-objdump
 SRCDIR=../src
 LIBDIR=../libs
 
-CFLAGS=-Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR)
+CFLAGS=-Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR) -DSTRATUMKEY_UART
 ASMFLAGS=-Wall -I$(SRCDIR) -I$(LIBDIR)
 LDFLAGS=-Wl,-Map=Map.map -Wl,-gc-sections
 DEBUGFLAGS=-g -gdwarf-2
@@ -27,7 +27,7 @@ DEBUGFLAGS=-g -gdwarf-2
 stratumkey_master.hex: stratumkey_master.elf
 	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-stratumkey_master.elf: main_master.o sha256.S.o uart_io.o swu_highlevel.o single_wire_UART.o
+stratumkey_master.elf: main_master.o sha256.S.o uart_io.o swu_highlevel.o single_wire_UART.o serial_message.o
 	$(CC) -mmcu=$(MCU) $(LDFLAGS) $^ -o $@
 	mv Map.map stratumkey_master.map
 
@@ -41,6 +41,9 @@ swu_highlevel.o: $(LIBDIR)/single_wire_uart/swu_highlevel.c
 	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
   
 single_wire_UART.o: $(LIBDIR)/single_wire_uart/single_wire_UART.c
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+
+serial_message.o: $(LIBDIR)/serial_message/serial_message.c
 	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
 
 main_master.o: $(SRCDIR)/main_master.c

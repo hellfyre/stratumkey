@@ -64,40 +64,19 @@ static volatile uint8_t   UART_Tx_buffer;   //!< Transmission buffer.
 static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
 
 /* Callback functions */
-swu_datarecv_cb_t swu_datarecv_callback = 0;
-uint8_t swu_receive_buffer[SWU_CB_RECV_BUFFER_SIZE];
-uint8_t swu_receive_buffer_ctr = 0;
-
-void swu_datarecv_accumulate(uint8_t data)
-{
-  if (swu_receive_buffer_ctr == SWU_CB_RECV_BUFFER_SIZE) {
-    // there is no message as long as the buffer, something went wrong
-    memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
-    swu_receive_buffer_ctr = 0;
-  }
-
-  swu_receive_buffer[swu_receive_buffer_ctr++] = data;
-  if (data == '\n') { // end of message indicated by '\n'
-    swu_datarecv_cb_dispatch();
-    memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
-    swu_receive_buffer_ctr = 0;
-  }
-}
+SW_UART_datarecv_cb_t SW_UART_datarecv_callback = NULL; // one callback is plenty
 
 // Register callback. Overwrite previously registered callback.
-void swu_datarecv_cb_register(swu_datarecv_cb_t cb)
-{
-  swu_datarecv_callback = cb;
+void SW_UART_datarecv_cb_register(SW_UART_datarecv_cb_t cb) {
+  SW_UART_datarecv_callback = cb;
 }
 
-void swu_datarecv_cb_dispatch()
-{
-  if (swu_datarecv_callback != 0) {
-    uint8_t *data = malloc(swu_receive_buffer_ctr);
-    memcpy(data, swu_receive_buffer, swu_receive_buffer_ctr);
-    swu_datarecv_callback(data, swu_receive_buffer_ctr);
-    free(data);
-  }
+void SW_UART_datarecv_cb_unregister() {
+  SW_UART_datarecv_callback = NULL;
+}
+
+void SW_UART_datarecv_cb_dispatch(uint8_t data) {
+  SW_UART_datarecv_callback(data);
 }
 
 /*! \brief  Enable the UART.
@@ -114,8 +93,6 @@ void swu_datarecv_cb_dispatch()
  */
 void SW_UART_Enable(void)
 {
-  memset(swu_receive_buffer, 0, SWU_CB_RECV_BUFFER_SIZE);
-
   //Tri-state communication pin.
   INITIALIZE_UART_PIN();
 
@@ -287,7 +264,10 @@ SIGNAL(SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR)
       SET_FLAG( SW_UART_status, SW_UART_RX_BUFFER_FULL );
       CLEAR_UART_EXTERNAL_INTERRUPT_FLAG();
       ENABLE_UART_EXTERNAL_INTERRUPT();   //Get ready to receive new byte.
-      swu_datarecv_accumulate(SW_UART_Receive());
+
+      if (SW_UART_datarecv_callback != NULL) {
+        SW_UART_datarecv_cb_dispatch(SW_UART_Receive());
+      }
     }
 
     //If reception finished and no new incoming data has been detected.
