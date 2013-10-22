@@ -38,19 +38,19 @@ sha256.S.o: $(LIBDIR)/avrcryptolib/sha256-asm.S
 	$(CC) -mmcu=$(MCU) $(ASMFLAGS) -o $@ -c $<
 
 uart_io.o: $(LIBDIR)/uart_io/uart_io.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) $(CFLAGS) -o $@ -c $<
 
 swu_highlevel.o: $(LIBDIR)/single_wire_uart/swu_highlevel.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
   
 single_wire_UART.o: $(LIBDIR)/single_wire_uart/single_wire_UART.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
 
 serial_message.o: $(LIBDIR)/serial_message/serial_message.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
 
 main.o: $(SRCDIR)/main.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -D$(MCU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
 
 .PHONY: upload
 upload: stratumkey_master.hex

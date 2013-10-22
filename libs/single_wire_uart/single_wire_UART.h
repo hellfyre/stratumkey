@@ -27,7 +27,6 @@
  ******************************************************************************/
 
 #include "stdint.h"     //Integer types.
-#include "swu_device_defines.h"
 
 #ifndef FALSE
   #define FALSE 0

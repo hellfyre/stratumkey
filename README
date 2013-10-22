@@ -27,5 +27,19 @@ the makefile's upload target, you probably want to install avrdude.
 On Debian/Ubuntu do:
 sudo apt-get install gcc-avr avr-libc avrdude
 
+
+== Using other microcontrollers ==
+
+The project is preconfigured to use an ATTiny85 as slave MCU and an ATMega8 as
+master MCU. If you want to use other ATMEL MCUs you need to figure out what
+timers and registers to use for the single wire protocol and then create your
+own device specific header file in libs/single_wire_uart/ and name after the
+pattern swu_device_defines_YOURMCU.h. Have a look at the other device headers.
+
+Also you need to adjust the makefiles. The MCU define is used by avr-gcc [4] and
+the DUDEMCU define is used by avrdude (execute `avrdude -p ?`).
+
 [1] https://stratum0.org
 [2] https://stratum0.org/mediawiki/index.php/Spacegate
+[3] https://github.com/hellfyre/stratumkey-daemon
+[4] http://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
