@@ -1,5 +1,5 @@
-Stratumkey is a physical access control system originally designed for enabling
-members of Stratum0 [1] to enter the hackerspace.
+Stratumkey [2] is a physical access control system originally designed for enabling
+members of Stratum 0 [1] to enter the hackerspace.
 
 The current implementation uses a large 3-pin male audio jack (6.3mm) on the
 slave side (the "key") and female audio jack on the master side (the "door").
@@ -9,8 +9,23 @@ The third pin is used for communication: We use a very simple one-wire protocol,
 which only supports two devices on the bus (master and slave). As our system is
 not intended to use more than two devices physically, we omitted the addressing.
 
-This repository holds the software part of the project. For more information,
-visit [2] or contact us.
+Currently the sole purpose of the master is to relay data. It is the interface
+between the single-wire-speaking key and the actual controller [3] (using UART to
+communicate). The master is intended to do additional stuff in the future, like
+opening the door.
+
+  (slave)------------(master)============(controller) [3]
+          singe-wire             UART
+
+== Requirements ==
+
+To build this project, you need a working avr-gcc and the avr-libc. If you want
+to flash the hex files to an actual MCU, you need of a hardware programmer (the
+makefiles are preconfigured to use an AVR Dragon) and if you want to do so using
+the makefile's upload target, you probably want to install avrdude.
+
+On Debian/Ubuntu do:
+sudo apt-get install gcc-avr avr-libc avrdude
 
 [1] https://stratum0.org
 [2] https://stratum0.org/mediawiki/index.php/Spacegate
