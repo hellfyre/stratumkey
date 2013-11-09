@@ -39,7 +39,7 @@ void uart_init() {
 
   // baudrate 250k @ 8MHz
   UBRRH = 0;
-  UBRRL = 51;
+  UBRRL = 1;
 }
 
 void uart_receive(uint8_t *data, uint8_t length) {
