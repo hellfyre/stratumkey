@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #include "single_wire_uart/single_wire_UART.h"
 #include "single_wire_uart/swu_highlevel.h"
 #include "uart_io/uart_io.h"
@@ -14,47 +16,35 @@ void wd_dis();
 
 void blink(uint8_t times);
 
-void swu_receive_callback(uint8_t data) {
-  SW_UART_datarecv_cb_unregister();
+void swu_receive_callback() {
 
-  serial_message_t *msg = sm_serial_message_new();
-  msg->msg_type = data;
-  msg->len = SW_UART_Receive();
+  serial_message_t msg;
+  sm_receive_msg(SWU, &msg);
 
-  uint8_t *payload = malloc(msg->len);
-  swu_receive(payload, msg->len);
-  sm_append_payload(msg, payload, msg->len);
-  free(payload);
-
-  if(msg->msg_type < 0xb0) {
-    sm_transmit_msg(UART, msg);
+  if(msg.type < 0xb0) {
+    sm_transmit_msg(UART, &msg);
   }
 
-  sm_serial_message_free(msg);
-  SW_UART_datarecv_cb_register(swu_receive_callback);
 }
 
-void uart_receive_callback(uint8_t data) {
-  uart_datarecv_cb_unregister();
+void uart_receive_callback() {
 
-  serial_message_t *msg = sm_serial_message_new();
-  msg->msg_type = data;
-  uart_receive(&(msg->len), 1);
+  serial_message_t msg;
+  sm_receive_msg(UART, &msg);
 
-  uint8_t *payload = malloc(msg->len);
-  uart_receive(payload, msg->len);
-  sm_append_payload(msg, payload, msg->len);
-  free(payload);
-
-  if(msg->msg_type < 0xb0) {
-    sm_transmit_msg(SWU, msg);
+  if(msg.type < 0xb0) {
+    sm_transmit_msg(SWU, &msg);
   }
 
-  sm_serial_message_free(msg);
-  uart_datarecv_cb_register(uart_receive_callback);
 }
 
 int main(void) {
+
+  // Fiepen ausschalten
+  DDRB = _BV(PB1);
+  DDRD |= _BV(PD4) | _BV(PD5) | _BV(PD6) | _BV(PD7);
+  PORTB &= ~_BV(PB1);
+  PORTD &= ~_BV(PD4) & ~_BV(PD5);
 
   sei();
   uart_init();
@@ -63,11 +53,12 @@ int main(void) {
   SW_UART_datarecv_cb_register(swu_receive_callback);
   uart_datarecv_cb_register(uart_receive_callback);
 
-  wd_en();
+  //wd_en();
 
   while(1) {}
 }
 
+/*
 void wd_en() {
   WDTCR |= _BV(WDP0);
   WDTCR |= _BV(WDE);
@@ -89,3 +80,4 @@ void blink(uint8_t times) {
   }
   _delay_ms(500);
 }
+*/

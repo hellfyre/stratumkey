@@ -1,8 +1,10 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <util/delay.h>
 
 #include "single_wire_uart/single_wire_UART.h"
+#include "single_wire_uart/swu_highlevel.h"
 #include "avrcryptolib/sha256.h"
 #include "eeprom_io/eeprom_io.h"
 #include "serial_message/serial_message.h"
@@ -26,35 +28,56 @@ int main(void) {
   sei();
   SW_UART_Enable();
 
+  _delay_ms(1000);
+  /*
+  while(1) {
+    uint8_t data[8];
+    data[0] = 0xa1;
+    data[1] = 0x06;
+    data[2] = 0xde;
+    data[3] = 0xad;
+    data[4] = 0xbe;
+    data[5] = 0xef;
+    data[6] = 0xaf;
+    data[7] = 0xfe;
+    swu_transmit(data, 8);
+    _delay_ms(2000);
+  }
+  */
+
   while(!success) {
-    /*----- Transmit ID + key2 -----*/
-    serial_message_t *msg = sm_serial_message_new();
+    //----- Transmit ID + key2 -----//
+    serial_message_t msg;
 
-    msg->msg_type = 0xa1;
-    sm_append_payload(msg, uuid, sizeof(uuid));
-    sm_append_payload(msg, key2, sizeof(key2));
+    msg.type = 0xa1;
+    sm_append_payload(&msg, uuid, sizeof(uuid));
+    sm_append_payload(&msg, key2, sizeof(key2));
 
-    sm_transmit_msg(SWU, msg);
-    sm_serial_message_free(msg);
+    sm_transmit_msg(SWU, &msg);
+    sm_clear_msg(&msg);
 
-    /*----- Receive challenge -----*/
-    msg = sm_receive_msg(SWU);
+    // DEBUG
+    //_delay_ms(2000);
+    //continue;
+    // DEBUG
 
-    if (msg->msg_type != 0xa2) continue;
+    //----- Receive challenge -----//
+    sm_receive_msg(SWU, &msg);
 
-    /*----- Concatenate challenge and key1 and hash the result -----*/
+    if (msg.type != 0xa2) continue;
+
+    //----- Concatenate challenge and key1 and hash the result -----//
     uint8_t chall_key1[64];
 
-    memcpy(chall_key1, msg->payload, 32);
+    memcpy(chall_key1, msg.payload, 32);
     memcpy(chall_key1+32, key1, 32);
     sha256(&hash, chall_key1, 512);
 
-    /*----- Transmit response -----*/
-    sm_delete_payload(msg);
-    
-    msg->msg_type = 0xa3;
-    sm_append_payload(msg, hash, sizeof(hash));
-    sm_transmit_msg(SWU, msg);
+    //----- Transmit response -----//
+    sm_clear_msg(&msg);
+    msg.type = 0xa3;
+    sm_append_payload(&msg, hash, sizeof(hash));
+    sm_transmit_msg(SWU, &msg);
     success = TRUE;
   }
 }

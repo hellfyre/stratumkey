@@ -1,13 +1,11 @@
 ## target mcu; avr-gcc and avrdude usually have different mcu-names
 # attiny13, attiny85, atmega8
-MCU	= atmega8
-# t13, t85, m8
-DUDEMCU	= m8
+MCU	= atmega328p
 F_CPU = 8000000UL
 
 ## avrdude options
-DUDEPROGRAMMER	= dragon_isp
-DUDEPORT	= usb
+PROGRAMMER	= dragon_isp
+PORT	= usb
 
 ## compiler definitions
 CC	= avr-gcc
@@ -16,8 +14,9 @@ OBJDUMP = avr-objdump
 
 SRCDIR=src
 LIBDIR=../libs
+DEVDEFDIR=../device_defines
 
-CFLAGS=-Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR) -DSTRATUMKEY_UART
+CFLAGS=-Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -fno-exceptions -I$(SRCDIR) -I$(LIBDIR) -I$(DEVDEFDIR) -DSTRATUMKEY_UART
 ASMFLAGS=-Wall -I$(SRCDIR) -I$(LIBDIR)
 LDFLAGS=-Wl,-Map=Map.map -Wl,-gc-sections
 DEBUGFLAGS=-g -gdwarf-2
@@ -38,23 +37,23 @@ sha256.S.o: $(LIBDIR)/avrcryptolib/sha256-asm.S
 	$(CC) -mmcu=$(MCU) $(ASMFLAGS) -o $@ -c $<
 
 uart_io.o: $(LIBDIR)/uart_io/uart_io.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DMCU_$(MCU) $(CFLAGS) -o $@ -c $<
 
 swu_highlevel.o: $(LIBDIR)/single_wire_uart/swu_highlevel.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DMCU_$(MCU) $(CFLAGS) -o $@ -c $<
   
 single_wire_UART.o: $(LIBDIR)/single_wire_uart/single_wire_UART.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DMCU_$(MCU) $(CFLAGS) -o $@ -c $<
 
 serial_message.o: $(LIBDIR)/serial_message/serial_message.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DMCU_$(MCU) $(CFLAGS) -o $@ -c $<
 
 main.o: $(SRCDIR)/main.c
-	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -include $(LIBDIR)/single_wire_uart/swu_device_defines_$(MCU).h $(CFLAGS) -o $@ -c $<
+	$(CC) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DMCU_$(MCU) $(CFLAGS) -o $@ -c $<
 
 .PHONY: upload
 upload: stratumkey_master.hex
-	avrdude -c $(DUDEPROGRAMMER) -P $(DUDEPORT) -p $(DUDEMCU) -U flash:w:$<:i
+	avrdude -c $(PROGRAMMER) -P $(PORT) -p $(MCU) -U flash:w:$<:i
 	rm -f *.map
 
 .PHONY: cleanall
