@@ -11,40 +11,43 @@
 #include "uart_io/uart_io.h"
 #include "serial_message/serial_message.h"
 
-void wd_en();
-void wd_dis();
+#ifndef FALSE
+  #define FALSE 0
+  #define TRUE !FALSE
+#endif
+#define RECVD_SWU recvd & 0x01
+#define RECVD_UART recvd & 0x02
+#define RECVD_SWU_SET recvd |= 0x01
+#define RECVD_UART_SET recvd |= 0x02
+#define RECVD_SWU_UNSET recvd &= ~0x01
+#define RECVD_UART_UNSET recvd &= ~0x02
 
-void blink(uint8_t times);
+#define LED_INIT DDRD |= _BV(PD6) | _BV(PD7);
+#define LED_G_EN PORTD |= _BV(PD7);
+#define LED_G_DIS PORTD &= ~_BV(PD7);
+#define LED_R_EN PORTD |= _BV(PD6);
+#define LED_R_DIS PORTD &= ~_BV(PD6);
+
+uint8_t recvd = 0;
+serial_message_t msg;
 
 void swu_receive_callback() {
 
-  serial_message_t msg;
+  LED_G_EN
   sm_receive_msg(SWU, &msg);
-
-  if(msg.type < 0xb0) {
-    sm_transmit_msg(UART, &msg);
-  }
+  RECVD_SWU_SET;
 
 }
 
 void uart_receive_callback() {
 
-  serial_message_t msg;
+  LED_R_EN
   sm_receive_msg(UART, &msg);
-
-  if(msg.type < 0xb0) {
-    sm_transmit_msg(SWU, &msg);
-  }
+  RECVD_UART_SET;
 
 }
 
 int main(void) {
-
-  // Fiepen ausschalten
-  DDRB = _BV(PB1);
-  DDRD |= _BV(PD4) | _BV(PD5) | _BV(PD6) | _BV(PD7);
-  PORTB &= ~_BV(PB1);
-  PORTD &= ~_BV(PD4) & ~_BV(PD5);
 
   sei();
   uart_init();
@@ -53,31 +56,29 @@ int main(void) {
   SW_UART_datarecv_cb_register(swu_receive_callback);
   uart_datarecv_cb_register(uart_receive_callback);
 
-  //wd_en();
+  LED_INIT
+  LED_R_EN
+  _delay_ms(1000);
+  LED_R_DIS
+  LED_G_EN
+  _delay_ms(1000);
+  LED_G_DIS
 
-  while(1) {}
-}
-
-/*
-void wd_en() {
-  WDTCR |= _BV(WDP0);
-  WDTCR |= _BV(WDE);
-}
-
-void wd_dis(){
-  WDTCR |= _BV(WDCE) | _BV(WDE);
-  WDTCR = 0x00;
-}
-
-void blink(uint8_t times) {
-  for (int i=0; i<times; i++) {
-    DDRB = _BV(PB6);
-    PORTB = _BV(PB6);
-    _delay_ms(500);
-    DDRB = 0;
-    PORTB = 0;
-    _delay_ms(500);
+  while(1) {
+    if (RECVD_SWU) {
+      sm_transmit_msg(UART, &msg);
+      sm_clear_msg(&msg);
+      RECVD_SWU_UNSET;
+      _delay_ms(1000);
+      LED_G_DIS
+    }
+    if (RECVD_UART) {
+      sm_transmit_msg(SWU, &msg);
+      sm_clear_msg(&msg);
+      RECVD_UART_UNSET;
+      _delay_ms(1000);
+      LED_R_DIS
+    }
   }
-  _delay_ms(500);
+
 }
-*/

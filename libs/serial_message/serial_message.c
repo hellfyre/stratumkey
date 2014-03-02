@@ -16,6 +16,7 @@ void sm_append_payload(serial_message_t *msg, uint8_t *data, uint8_t len) {
 void sm_clear_msg(serial_message_t *msg) {
   msg->type = 0;
   msg->len = 0;
+  //memcpy(msg->payload, 0, SM_MAX_PAYLOAD);
 }
 
 void sm_serialize(serial_message_t *msg, uint8_t *data) {

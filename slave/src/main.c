@@ -14,11 +14,23 @@
   #define TRUE !FALSE
 #endif
 
+#define RECVD_SWU recvd & 0x01
+#define RECVD_SWU_SET recvd |= 0x01
+#define RECVD_SWU_UNSET recvd &= ~0x01
+
+#define LED_INIT DDRB |= _BV(PB4);
+#define LED_EN PORTB |= _BV(PB4);
+#define LED_DIS PORTB &= ~_BV(PB4);
+
 uint8_t key1[32];
 uint8_t key2[32];
 uint8_t uuid[16];
+uint8_t recvd = 0;
 uint8_t success = FALSE;
 sha256_hash_t hash;
+
+void swu_receive_callback() {
+}
 
 int main(void) {
   eeprom_load(key1,  0, 32);
@@ -27,25 +39,12 @@ int main(void) {
 
   sei();
   SW_UART_Enable();
+  //SW_UART_datarecv_cb_register(swu_receive_callback);
 
-  _delay_ms(1000);
-  /*
-  while(1) {
-    uint8_t data[8];
-    data[0] = 0xa1;
-    data[1] = 0x06;
-    data[2] = 0xde;
-    data[3] = 0xad;
-    data[4] = 0xbe;
-    data[5] = 0xef;
-    data[6] = 0xaf;
-    data[7] = 0xfe;
-    swu_transmit(data, 8);
-    _delay_ms(2000);
-  }
-  */
+  LED_INIT
+  _delay_ms(200);
 
-  while(!success) {
+  //while(!success) {
     //----- Transmit ID + key2 -----//
     serial_message_t msg;
 
@@ -56,15 +55,44 @@ int main(void) {
     sm_transmit_msg(SWU, &msg);
     sm_clear_msg(&msg);
 
+    //----- Receive challenge -----//
+    /*
+    while(1) {
+      //PINB |= _BV(PB4);
+      if (RECVD_SWU) {
+        _delay_ms(500);
+        LED_DIS
+        RECVD_SWU_UNSET;
+        break;
+      }
+    }
+    */
+    _delay_ms(3000);
+    sm_receive_msg(SWU, &msg);
+    for (int i=0; i<msg.len; i++) {
+      msg.payload[i]++;
+    }
+    sm_transmit_msg(SWU, &msg);
+
+    /*
+    uint8_t debug_answer[4];
+    debug_answer[0] = 0xde;
+    debug_answer[1] = 0xad;
+    debug_answer[2] = 0xbe;
+    debug_answer[3] = 0xef;
+    msg.type = 0xa3;
+    sm_append_payload(&msg, debug_answer, sizeof(debug_answer));
+    sm_transmit_msg(SWU, &msg);
+    */
+    sm_clear_msg(&msg);
+    //swu_transmit(debug_answer, 4);
+
     // DEBUG
     //_delay_ms(2000);
     //continue;
     // DEBUG
 
-    //----- Receive challenge -----//
-    sm_receive_msg(SWU, &msg);
-
-    if (msg.type != 0xa2) continue;
+    //if (msg.type != 0xa2) continue;
 
     //----- Concatenate challenge and key1 and hash the result -----//
     uint8_t chall_key1[64];
@@ -79,5 +107,5 @@ int main(void) {
     sm_append_payload(&msg, hash, sizeof(hash));
     sm_transmit_msg(SWU, &msg);
     success = TRUE;
-  }
+  //}
 }
