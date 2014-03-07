@@ -34,11 +34,7 @@
 #include <avr/io.h>              //Device specific register/Bit definitions.
 #include <avr/interrupt.h>              //The __enable_interrupt() intrinsic.
 #include "stdint.h"             //Integer types.
-#include "single_wire_UART.h"   //UART settings
-#include "string.h"             //memcpy(), memset()
-
-#include <stdio.h>
-#include "uart_io/uart_io.h"
+#include "single_wire_UART.h"   //UART settings and device spesific.
 
 /* Counter values */
 #define UART_STATE_IDLE       0
@@ -51,11 +47,6 @@
 #define TRANSMIT_STOP_1       18
 #define TRANSMIT_STOP_2       20
 #define TRANSMIT_FINISH       22
-
-#define RINGBUFFER_IDLE       0
-#define RINGBUFFER_FIRST_BYTE 2
-#define RINGBUFFER_RECVD_SIZE 4
-#define ringbuffer_size 64
 
 /* Prototypes */
 void SW_UART_Complete_Transfer(void);
@@ -70,68 +61,6 @@ static volatile uint8_t   UART_Rx_data;     //!< Byte holding data being receive
 static volatile uint8_t   UART_Tx_buffer;   //!< Transmission buffer.
 static volatile uint8_t   UART_Rx_buffer;   //!< Reception buffer.
 
-/* Callback functions */
-SW_UART_datarecv_cb_t SW_UART_datarecv_callback = NULL; // one callback is plenty
-volatile uint8_t ringbuffer_status;
-volatile uint8_t ringbuffer_bytes_to_read;
-volatile uint8_t ringbuffer[ringbuffer_size];
-volatile uint8_t ringbuffer_writeptr;
-volatile uint8_t ringbuffer_readptr;
-
-// Register callback. Overwrite previously registered callback.
-void SW_UART_datarecv_cb_register(SW_UART_datarecv_cb_t cb) {
-  SW_UART_datarecv_callback = cb;
-}
-
-void SW_UART_datarecv_cb_unregister() {
-  SW_UART_datarecv_callback = NULL;
-}
-
-uint8_t SW_UART_ringbuffer_read(uint8_t *data, uint8_t len) {
-  if (ringbuffer_readptr == ringbuffer_writeptr) {
-    return 2;
-  }
-
-  for (uint8_t i=0; i<len; i++) {
-    data[i] = ringbuffer[ringbuffer_readptr];
-    ringbuffer[ringbuffer_readptr] = 0;
-    ringbuffer_readptr++;
-    if (ringbuffer_readptr == ringbuffer_size) {
-      ringbuffer_readptr = 0;
-    }
-  }
-
-  if (ringbuffer_readptr == ringbuffer_writeptr) {
-    return 1;
-  }
-
-  return 0;
-}
-
-void SW_UART_ringbuffer_write(uint8_t data) {
-
-  ringbuffer[ringbuffer_writeptr++] = data;
-  if (ringbuffer_writeptr == ringbuffer_size) {
-    ringbuffer_writeptr = 0;
-  }
-
-  if (ringbuffer_status == RINGBUFFER_IDLE) {
-    ringbuffer_status = RINGBUFFER_FIRST_BYTE;
-  }
-  else if (ringbuffer_status == RINGBUFFER_FIRST_BYTE) {
-    ringbuffer_status = RINGBUFFER_RECVD_SIZE;
-    ringbuffer_bytes_to_read = data;
-  }
-  else if (ringbuffer_status == RINGBUFFER_RECVD_SIZE) {
-    ringbuffer_bytes_to_read--;
-    if (ringbuffer_bytes_to_read == 0) {
-      ringbuffer_status = RINGBUFFER_IDLE;
-      if (SW_UART_datarecv_callback) {
-        SW_UART_datarecv_callback();
-      }
-    }
-  }
-}
 
 /*! \brief  Enable the UART.
  *
@@ -149,12 +78,6 @@ void SW_UART_Enable(void)
 {
   //Tri-state communication pin.
   INITIALIZE_UART_PIN();
-
-  ringbuffer_status = RINGBUFFER_IDLE;
-  ringbuffer_bytes_to_read = 0;
-  memset(ringbuffer, 0, ringbuffer_size);
-  ringbuffer_writeptr = 0;
-  ringbuffer_readptr = 0;
 
   SW_UART_status = 0x00;
   UART_counter = UART_STATE_IDLE;
@@ -324,16 +247,11 @@ ISR(SW_UART_TIMER_COMPARE_INTERRUPT_VECTOR)
       SET_FLAG( SW_UART_status, SW_UART_RX_BUFFER_FULL );
       CLEAR_UART_EXTERNAL_INTERRUPT_FLAG();
       ENABLE_UART_EXTERNAL_INTERRUPT();   //Get ready to receive new byte.
-
-      SW_UART_ringbuffer_write(SW_UART_Receive());
     }
 
     //If reception finished and no new incoming data has been detected.
     else if(UART_counter == RECEIVE_FINISH)
     {
-      //print_ringbuffer();
-      //SW_UART_datarecv_callback();
-
       //Initiate transmission if there is data in TX_buffer. This is done in the
       //same way as in the UART_transmit routine.
       if( READ_FLAG(SW_UART_status, SW_UART_TX_BUFFER_FULL) )

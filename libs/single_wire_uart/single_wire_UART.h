@@ -50,7 +50,7 @@
 #define WAIT_ONEHALF          (WAIT_ONE + WAIT_ONE/2)
 
 #if (PRESCALER == 1)
-  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_1))
+  #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_1))  //Needs to be change if a different timer is used. Please refer to datasheet.
   #define STOP_UART_TIMER()      (TIMER_PRESCALER_CONTROL_REGISTER &= ~(1<<TIMER_PRESCALER_1))
 #elif (PRESCALER == 8)
   #define START_UART_TIMER()     (TIMER_PRESCALER_CONTROL_REGISTER |= (1<<TIMER_PRESCALER_8))
@@ -125,14 +125,6 @@ extern volatile uint8_t SW_UART_status;         //!< Byte holding status flags.
 //when the GPIO register is used.
 //__io __no_init static volatile uint8_t SW_UART_status @ 0x1E;
 
-// Single wire UART data received callback
-typedef void (*SW_UART_datarecv_cb_t)();
-//extern SW_UART_datarecv_cb_t SW_UART_datarecv_callback; // one callback is plenty
-
-void SW_UART_datarecv_cb_register(SW_UART_datarecv_cb_t cb);
-void SW_UART_datarecv_cb_unregister();
-uint8_t SW_UART_ringbuffer_read(uint8_t *data, uint8_t len);
-void SW_UART_ringbuffer_write(uint8_t data);
 
 /* Global UART functions. */
 void    SW_UART_Enable(void);       //!< Enable the UART.
