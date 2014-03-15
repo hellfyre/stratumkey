@@ -9,45 +9,34 @@
 #include "eeprom_io/eeprom_io.h"
 #include "serial_message/serial_message.h"
 
-#ifndef FALSE
-  #define FALSE 0
-  #define TRUE !FALSE
-#endif
-
-#define RECVD_SWU recvd & 0x01
-#define RECVD_SWU_SET recvd |= 0x01
-#define RECVD_SWU_UNSET recvd &= ~0x01
-
 #define LED_INIT DDRB |= _BV(PB4);
 #define LED_EN PORTB |= _BV(PB4);
 #define LED_DIS PORTB &= ~_BV(PB4);
 
+// define 'State' func ptr
+typedef void (*State)(void);
+
+typedef enum events {
+  NOTHING,
+  MSG_RECVD,
+  TIMEOUT
+} Event;
+
+State state;
+serial_message_t msg;
+
+uint8_t counter = 0;
+
 uint8_t key1[32];
 uint8_t key2[32];
 uint8_t uuid[16];
-uint8_t recvd = 0;
-uint8_t success = FALSE;
 sha256_hash_t hash;
 
-void swu_receive_callback() {
-}
-
-int main(void) {
-  eeprom_load(key1,  0, 32);
-  eeprom_load(key2, 32, 32);
-  eeprom_load(uuid, 64, 16);
-
-  sei();
-  SW_UART_Enable();
-  //SW_UART_datarecv_cb_register(swu_receive_callback);
-
-  LED_INIT
-  _delay_ms(200);
-
-  //while(!success) {
+// define state functions
+void state_init(Event ev) {
+  if(ev == NOTHING) {
     //----- Transmit ID + key2 -----//
-    serial_message_t msg;
-
+    sm_clear_msg(&msg);
     msg.type = 0xa1;
     sm_append_payload(&msg, uuid, sizeof(uuid));
     sm_append_payload(&msg, key2, sizeof(key2));
@@ -55,44 +44,20 @@ int main(void) {
     sm_transmit_msg(SWU, &msg);
     sm_clear_msg(&msg);
 
-    //----- Receive challenge -----//
-    /*
-    while(1) {
-      //PINB |= _BV(PB4);
-      if (RECVD_SWU) {
-        _delay_ms(500);
-        LED_DIS
-        RECVD_SWU_UNSET;
-        break;
-      }
-    }
-    */
-    _delay_ms(3000);
+    state = state_id_sent;
+    counter = 0;
+  }
+}
+
+void state_id_sent(Event ev) {
+  if(ev == MSG_RECVD) {
+
     sm_receive_msg(SWU, &msg);
-    for (int i=0; i<msg.len; i++) {
-      msg.payload[i]++;
+    if (msg.type != 0xa2) {
+      state = state_init;
+      sm_clear_msg(&msg);
+      return;
     }
-    sm_transmit_msg(SWU, &msg);
-
-    /*
-    uint8_t debug_answer[4];
-    debug_answer[0] = 0xde;
-    debug_answer[1] = 0xad;
-    debug_answer[2] = 0xbe;
-    debug_answer[3] = 0xef;
-    msg.type = 0xa3;
-    sm_append_payload(&msg, debug_answer, sizeof(debug_answer));
-    sm_transmit_msg(SWU, &msg);
-    */
-    sm_clear_msg(&msg);
-    //swu_transmit(debug_answer, 4);
-
-    // DEBUG
-    //_delay_ms(2000);
-    //continue;
-    // DEBUG
-
-    //if (msg.type != 0xa2) continue;
 
     //----- Concatenate challenge and key1 and hash the result -----//
     uint8_t chall_key1[64];
@@ -106,6 +71,44 @@ int main(void) {
     msg.type = 0xa3;
     sm_append_payload(&msg, hash, sizeof(hash));
     sm_transmit_msg(SWU, &msg);
-    success = TRUE;
-  //}
+
+    //----- Phase 3: Profit! -----//
+    state = state_success;
+  }
+  else if(ev == TIMEOUT) {
+    state = state_init;
+  }
+
+}
+
+void state_success(Event ev) {}
+
+int main(void) {
+  eeprom_load(key1,  0, 32);
+  eeprom_load(key2, 32, 32);
+  eeprom_load(uuid, 64, 16);
+
+  sei();
+  SW_UART_Enable();
+
+  while(state != state_success) {
+    if( READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL) ) {
+      state(MSG_RECVD);
+    }
+    else {
+      
+      _delay_ms(100);
+
+      counter++;
+      if(counter == 20) {
+        counter = 0;
+        state(TIMEOUT);
+      }
+      else {
+        state(NOTHING);
+      }
+
+    }
+  }
+
 }
