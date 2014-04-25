@@ -47,6 +47,10 @@ void state_init(Event ev) {
     state = state_id_sent;
     counter = 0;
   }
+  else if (ev == MSG_RECVD) {
+    // We don't expect data and thus empty the buffer
+    SW_UART_Receive();
+  }
 }
 
 void state_id_sent(Event ev) {
@@ -91,9 +95,12 @@ int main(void) {
   sei();
   SW_UART_Enable();
 
+  state = state_init();
+
   while(state != state_success) {
     if( READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL) ) {
       state(MSG_RECVD);
+      counter = 0;
     }
     else {
       
