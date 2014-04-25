@@ -11,40 +11,35 @@
 #include "uart_io/uart_io.h"
 #include "serial_message/serial_message.h"
 
-#ifndef FALSE
-  #define FALSE 0
-  #define TRUE !FALSE
-#endif
-#define RECVD_SWU recvd & 0x01
-#define RECVD_UART recvd & 0x02
-#define RECVD_SWU_SET recvd |= 0x01
-#define RECVD_UART_SET recvd |= 0x02
-#define RECVD_SWU_UNSET recvd &= ~0x01
-#define RECVD_UART_UNSET recvd &= ~0x02
-
 #define LED_INIT DDRD |= _BV(PD6) | _BV(PD7);
 #define LED_G_EN PORTD |= _BV(PD7);
 #define LED_G_DIS PORTD &= ~_BV(PD7);
 #define LED_R_EN PORTD |= _BV(PD6);
 #define LED_R_DIS PORTD &= ~_BV(PD6);
 
-uint8_t recvd = 0;
+// define 'State' func ptr
+typedef void (*State)(void);
+
+typedef enum events {
+  SWU_RECVD,
+  UART_RECVD,
+  THREE
+} Event;
+
+State state;
 serial_message_t msg;
 
-void swu_receive_callback() {
-
-  LED_G_EN
-  sm_receive_msg(SWU, &msg);
-  RECVD_SWU_SET;
-
-}
-
-void uart_receive_callback() {
-
-  LED_R_EN
-  sm_receive_msg(UART, &msg);
-  RECVD_UART_SET;
-
+// define state functions
+void state_idle(Event ev) {
+  if (ev == SWU_RECVD) {
+    sm_receive_msg(SWU, &msg);
+    sm_transmit_msg(UART, &msg);
+  }
+  else if (ev == UART_RECVD) {
+    sm_receive_msg(UART, &msg);
+    sm_transmit_msg(SWU, &msg);
+  }
+  sm_clear_msg(&msg);
 }
 
 int main(void) {
@@ -53,31 +48,12 @@ int main(void) {
   uart_init();
   SW_UART_Enable();
 
-  SW_UART_datarecv_cb_register(swu_receive_callback);
-  uart_datarecv_cb_register(uart_receive_callback);
-
-  LED_INIT
-  LED_R_EN
-  _delay_ms(1000);
-  LED_R_DIS
-  LED_G_EN
-  _delay_ms(1000);
-  LED_G_DIS
-
   while(1) {
-    if (RECVD_SWU) {
-      sm_transmit_msg(UART, &msg);
-      sm_clear_msg(&msg);
-      RECVD_SWU_UNSET;
-      _delay_ms(1000);
-      LED_G_DIS
+    if ( READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL) ) {
+      state(SWU_RECVD);
     }
-    if (RECVD_UART) {
-      sm_transmit_msg(SWU, &msg);
-      sm_clear_msg(&msg);
-      RECVD_UART_UNSET;
-      _delay_ms(1000);
-      LED_R_DIS
+    if ( uart_msg_waiting() ) {
+      state(UART_RECVD);
     }
   }
 

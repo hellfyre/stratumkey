@@ -19,6 +19,10 @@ void uart_init() {
   BAUD_LOW = 51;
 }
 
+uint8_t uart_msg_waiting() {
+  return (STATUS_A & (1<<RECV_COMPLETE));
+}
+
 void uart_receive(uint8_t *data, uint8_t length) {
   for (int i=0; i<length; i++) {
     while ( !(STATUS_A & (1<<RECV_COMPLETE)) ) {}
