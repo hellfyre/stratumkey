@@ -46,15 +46,15 @@ void sm_transmit_msg(sm_line_t line, serial_message_t *msg) {
 
 void sm_receive_msg(sm_line_t line, serial_message_t *msg) {
   if (line == SWU) {
-    SW_UART_ringbuffer_read(&(msg->type), 1);
-    SW_UART_ringbuffer_read(&(msg->len), 1);
-    SW_UART_ringbuffer_read(msg->payload, msg->len);
+    swu_receive(&(msg->type), 1);
+    swu_receive(&(msg->len), 1);
+    swu_receive(msg->payload, msg->len);
   }
 #ifdef STRATUMKEY_UART
   else if (line == UART) {
-    uart_ringbuffer_read(&(msg->type), 1);
-    uart_ringbuffer_read(&(msg->len), 1);
-    uart_ringbuffer_read(msg->payload, msg->len);
+    uart_receive(&(msg->type), 1);
+    uart_receive(&(msg->len), 1);
+    uart_receive(msg->payload, msg->len);
   }
 #endif
 }
