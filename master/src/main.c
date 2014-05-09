@@ -17,43 +17,48 @@
 #define LED_R_EN PORTD |= _BV(PD6);
 #define LED_R_DIS PORTD &= ~_BV(PD6);
 
-// define 'State' func ptr
-typedef void (*State)(void);
+#define BUFSIZE 48
 
-typedef enum events {
-  SWU_RECVD,
-  UART_RECVD,
-  THREE
-} Event;
-
-State state;
+uint8_t swu_buffer[BUFSIZE+1];
+uint8_t uart_buffer[BUFSIZE+1];
 serial_message_t msg;
 
-// define state functions
-void state_idle(Event ev) {
-  if (ev == SWU_RECVD) {
-    sm_receive_msg(SWU, &msg);
-    sm_transmit_msg(UART, &msg);
-  }
-  else if (ev == UART_RECVD) {
-    sm_receive_msg(UART, &msg);
-    sm_transmit_msg(SWU, &msg);
-  }
-  sm_clear_msg(&msg);
+void reset_buffer(uint8_t *buffer) {
+  for (int i=0; i<BUFSIZE; i++) buffer[i] = 0;
+  buffer[BUFSIZE] = 1;
 }
 
 int main(void) {
 
   sei();
+  reset_buffer(swu_buffer);
   uart_init();
   SW_UART_Enable();
 
   while(1) {
-    if ( READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL) ) {
-      state(SWU_RECVD);
+    while ( READ_FLAG(SW_UART_status, SW_UART_RX_BUFFER_FULL) ) {
+      swu_buffer[swu_buffer[BUFSIZE]] = SW_UART_Receive();
+      swu_buffer[BUFSIZE]++;
+      if ( swu_buffer[BUFSIZE] > 1 &&
+           swu_buffer[BUFSIZE] == (swu_buffer[1]-2) ) {
+        sm_deserialize(swu_buffer, &msg);
+        reset_buffer(swu_buffer);
+        sm_transmit_msg(UART, &msg);
+        sm_clear_msg(&msg);
+        break; // just in case
+      }
     }
-    if ( uart_msg_waiting() ) {
-      state(UART_RECVD);
+    while ( uart_msg_waiting() ) {
+      uart_receive(&uart_buffer[uart_buffer[BUFSIZE]], 1);
+      uart_buffer[BUFSIZE]++;
+      if ( uart_buffer[BUFSIZE] > 1 &&
+           uart_buffer[BUFSIZE] == (uart_buffer[1]-2) ) {
+        sm_deserialize(uart_buffer, &msg);
+        reset_buffer(uart_buffer);
+        sm_transmit_msg(SWU, &msg);
+        sm_clear_msg(&msg);
+        break; // just in case
+      }
     }
   }
 
